@@ -20,8 +20,11 @@ class instrument:
         # Boot up server to play and record sound
         ser = Server(audio='offline').boot()
         
+        #i think I should actually change this?? actually never mind, directory represents the specific folder in this case but they can be in any order
+        file_path = "/Users/johnk/OneDrive/Computer Science/Lab stuff/sounds"
+
         # Includes the absolute filepath, the specific folder and the new file name
-        path = os.path.join("/Users/johnk/OneDrive/Computer Science/Lab stuff/sounds", self.directory, self.filename)
+        path = os.path.join(file_path, self.directory, self.filename)
         ser.recordOptions(dur=5, filename=path, fileformat=0, sampletype=1 )
 
         # Create empty arrays that will be filled out using passed in parameters
@@ -49,4 +52,27 @@ class instrument:
         ser.shutdown()
 
        
+# !!! WARNING the generated wav file can be pretty loud so lower your volume a lot if you listen to it !!!
 
+# Set up Flute representation
+nums = 10
+harms = [0] * nums
+
+amps = [1.0, 0.65, 0.61, 0.15, 0.09, 0.02, 0.02, 0.01, 0.01, 0.01]
+
+a = [0.01] * nums
+d = [0.1] * nums
+s = [0.5] * nums
+r = [1.5] * nums  
+
+freq = 247
+for i in range(nums):
+    harms[i] = (i+1) * freq
+
+# Also set up the file name and the directory for where you want to put wav file
+
+#file_name = "Flute_test.wav"
+#directory = "sounds"
+
+#randSound = instrument(harms, amps, a, d, s, r, nums, file_name, directory)
+#randSound.play_note()
