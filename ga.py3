@@ -1,5 +1,3 @@
-# another small change
-
 import numpy
 import random
 import sound_generation
@@ -46,10 +44,13 @@ num_mutation = 2
 selected_mutation = 1
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-dont_generate_files = True
+dont_generate_files = False
 
 # Number of islands in representation
 num_isles = 10
+
+# Boolean that switches between sound version (floats) and instrument version (ratios)
+sound_mode = False
 
 
 # Making an ideal set, used for dummy fitness function
@@ -178,7 +179,12 @@ def dummy_fitness_helper(population, ideal_set, scores, weight, island_weights):
         for j in range(num_genes):
             for k in range(gene_length):
                 # Calculates score of each element in gene array
-                temp_score += abs(ideal_set[j][k] - population[i][j][k])
+                if(sound_mode == False and i == 0):
+                    temp_score += abs(ideal_set[j][k] - (population[i][j][k] * population[i][j][num_genes]) )      
+                else:
+                    temp_score += abs(ideal_set[j][k] - population[i][j][k])
+                    
+
         # At this point, score should be the sum of scores of all elements in all the genes of the current parent
         # Then we average it by dividing by the total number of elements in each parent
         temp_score = temp_score / (num_genes * gene_length)
@@ -217,6 +223,7 @@ def check_increasing_harmonics(population, scores, weight, island_weights):
 
     # Gives good fitness scores to parents that have increasing partials
     # That pattern of partials is generally more desirable than random changes in partials
+    # Don't need to change for instrument mode since the ratios ideally will increase anyway
 
     temp_score = 0
 
@@ -241,18 +248,32 @@ def check_true_harmonics(population, scores, weight, island_weights):
 
     temp_score = 0
 
+    # for some reason this is looping 16 times instead of 8
+    # ACTUALLY THERE APPEARS TO BE AN INFINITE LOOP somewhere
+    # problem seems to lie with functions that reference base_freq as the 7th element in population array
     for i in range(mems_per_pop):
 
         # Take the first frequency in the harmonics array of one member
-        base_freq = population[i][0][0] 
+        if(sound_mode):
+            base_freq = population[i][0][0] 
+            #print("looping")
+        else:
+            #print(population[i])
+            #print(len(population))
+            base_freq = population[i][num_genes]
+            #print("looping")
 
         for j in range(gene_length - 1):
 
             # Uses int division to round
-            if(population[i][0][j + 1] // base_freq == 0 and population[i][0][j + 1] > base_freq):
-                temp_score = temp_score + 1
+            if(sound_mode):
+                if(population[i][0][j + 1] // base_freq == 0 and population[i][0][j + 1] > base_freq):
+                    temp_score = temp_score + 1
                 #print(int(population[i][0][j + 1]))
                 #print(int(base_freq))
+            else:
+                if((population[i][0][j + 1]).is_integer()):
+                    temp_score = temp_score + 1
 
         scores[i] += temp_score * weight * island_weights[i]
         temp_score = 0
@@ -275,9 +296,13 @@ def check_wobbling(population, scores, weight, island_weights):
 
         for j in range(gene_length - 1):
 
-            # Instead of 10, may want to change it to a smaller range like 5
-            if(abs(base_freq - population[i][0][j + 1]) < 10):
-                temp_score = temp_score + 1 
+            if(sound_mode):
+                # Instead of 10, may want to change it to a smaller range like 5
+                if(abs(base_freq - population[i][0][j + 1]) < 10):
+                    temp_score = temp_score + 1 
+            else:
+                if(abs(population[i][0][j + 1] - 1) < 0.1):
+                    temp_score = temp_score + 1 
 
         scores[i] -= temp_score * weight * island_weights[i]
         temp_score = 0
@@ -298,9 +323,13 @@ def check_octaves(population, scores, weight, island_weights):
 
         for j in range(gene_length - 1):
 
-            # Checks if there is a direct octave to base frequency
-            if(int(population[i][0][j + 1]) == int(base_freq) * 2 ):
-                temp_score = temp_score + 1
+            if(sound_mode):
+                # Checks if there is a direct octave to base frequency
+                if(int(population[i][0][j + 1]) == int(base_freq) * 2 ):
+                    temp_score = temp_score + 1
+            else:
+                if(population[i][0][j + 1] == 2.0):
+                    temp_score = temp_score + 1
 
         scores[i] += temp_score * weight * island_weights[i]
         temp_score = 0
@@ -321,9 +350,13 @@ def check_fifths(population, scores, weight, island_weights):
 
         for j in range(gene_length - 1):
 
-            # Checks if there is a perfect fifth to base frequency
-            if(int(population[i][0][j + 1]) * 2 == int(base_freq) * 3 ):
-                temp_score = temp_score + 1
+            if(sound_mode):
+                # Checks if there is a perfect fifth to base frequency
+                if(int(population[i][0][j + 1]) * 2 == int(base_freq) * 3 ):
+                    temp_score = temp_score + 1
+            else:
+                if(population[i][0][j + 1] == 1.5):
+                    temp_score = temp_score + 1
 
         scores[i] += temp_score * weight * island_weights[i]
         temp_score = 0
@@ -362,27 +395,38 @@ def error_off_partial(population, scores, weight, island_weights):
 
     # Rewards members that have frequencies that are closer to partials
 
+    #mems_per_pop
     for i in range(mems_per_pop):
 
         # Used to help calculate partials
-        base_freq = population[i][0][0]
+        if(sound_mode):
+            base_freq = population[i][0][0]
+        else:
+            base_freq = population[i][num_genes]
+            # issue with infinite loops
+            #print("LOOPING")
 
         temp_sum = 0
 
         for j in range(gene_length - 1):
 
-            # Finds the the multiple of base freq that is closest to current freq
-            if base_freq > population[i][0][j + 1]:
-                temp_sum += pow(base_freq - population[i][0][j + 1], 2)
+            if(sound_mode):
+                # Finds the the multiple of base freq that is closest to current freq
+                if base_freq > population[i][0][j + 1]:
+                    temp_sum += pow(base_freq - population[i][0][j + 1], 2)
             
-            else:    
-                # Runs if base freq is smaller than the current freq
-                n = closestMultiple(population[i][0][j + 1], base_freq)
+                else:    
+                    # Runs if base freq is smaller than the current freq
+                    n = closestMultiple(population[i][0][j + 1], base_freq)
 
-                if(population[i][0][j + 1] - n > 0.5):
-                    n = n + 1
+                    if(population[i][0][j + 1] - n > 0.5):
+                        n = n + 1
 
-                temp_sum += pow(population[i][0][j + 1] - n, 2)
+                    temp_sum += pow(population[i][0][j + 1] - n, 2)
+            else:
+                nearest_partial = round(population[i][0][j + 1])
+                temp_sum += pow(population[i][0][j + 1] - nearest_partial, 2)
+
 
         # Use inverse of score because a bigger sum means a larger off error which is bad
         scores[i] -= math.sqrt(temp_sum) * weight * island_weights[i]
@@ -652,8 +696,12 @@ def deep_uniform_crossover (parents):
         d = numpy.random.uniform(low=0.0, high=10.0, size=gene_length)
         s = numpy.random.uniform(low=0.0, high=10.0, size=gene_length)
         r = numpy.random.uniform(low=0.0, high=10.0, size=gene_length)
-
-        child1 = [harms, amps, a, d, s, r]
+        
+        base_freq = 0
+        if(sound_mode):
+            child1 = [harms, amps, a, d, s, r]
+        else:
+            child1 = [harms, amps, a, d, s, r, base_freq]
 
         # New variables are created because otherwise child1 and child2 hold the same data
 
@@ -664,7 +712,10 @@ def deep_uniform_crossover (parents):
         s2 = numpy.random.uniform(low=0.0, high=10.0, size=gene_length)
         r2 = numpy.random.uniform(low=0.0, high=10.0, size=gene_length)
 
-        child2 = [harms2, amps2, a2, d2, s2, r2]
+        if(sound_mode):
+            child2 = [harms, amps, a, d, s, r]
+        else:
+            child2 = [harms, amps, a, d, s, r, base_freq]
 
         if(c == num_parents - 1):
 
@@ -696,6 +747,20 @@ def deep_uniform_crossover (parents):
                     else:
                         # pick parent 2
                         child2[i][j] = parent2[i][j]
+
+            # Additional handling required for instrument mode
+            if(sound_mode == False):
+                coin = random.randint(0, 1)
+
+                #print(parent1[i])
+
+                if(coin):
+                    child1[num_genes] = parent1[num_genes]
+                    child2[num_genes] = parent2[num_genes]
+                else:
+                    child1[num_genes] = parent2[num_genes]
+                    child2[num_genes] = parent1[num_genes]
+
 
             # Add two new members to new population
             new_generation[z] = child1
@@ -732,6 +797,17 @@ def deep_uniform_crossover (parents):
                     else:
                         # pick parent 2
                         child2[i][j] = parent2[i][j]
+
+        # Additional handling required for instrument mode
+        if(sound_mode == False):
+                coin = random.randint(0, 1)
+
+                if(coin):
+                    child1[num_genes] = parent1[num_genes]
+                    child2[num_genes] = parent2[num_genes]
+                else:
+                    child1[num_genes] = parent2[num_genes]
+                    child2[num_genes] = parent1[num_genes]
 
         # Add two new members to new population
         new_generation[z] = child1
@@ -809,6 +885,9 @@ def mutate_chromosome(population):
 
     for i in range(num_genes):
         for j in range(gene_length):
+            # Additional handling required for instrument mode
+            if(sound_mode == False and i == 0 and j == 0):
+                continue
             population[p][i][j] = population[p][i][j] * scalar
 
 
@@ -818,20 +897,38 @@ def intial_gen():
 
     # Creates a new population using randomly generated values
     new_population = [0] * mems_per_pop
-    for i in range(mems_per_pop):
-        new_population[i] = [0] * num_genes
+
+    if(sound_mode):
+        for i in range(mems_per_pop):
+            new_population[i] = [0] * num_genes
+    else:
+        for i in range(mems_per_pop):
+            new_population[i] = [0] * (num_genes + 1)
 
     # May want to change high range of m if wav files are too loud
     # Was originally 1.0 instead of 0.5
 
     for i in range(mems_per_pop):
-        h = numpy.random.uniform(low=0.0, high=2500.0, size=gene_length)
+
+        
         m = numpy.random.uniform(low=0.0, high=0.5, size=gene_length)
         a = numpy.random.uniform(low=0.0, high=0.02, size=gene_length)
         d = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
         s = numpy.random.uniform(low=0.0, high=1.0, size=gene_length)
         r = numpy.random.uniform(low=0.0, high=3.0, size=gene_length)
-        new_population[i] = [h, m, a, d, s, r]
+
+        if(sound_mode):
+            h = numpy.random.uniform(low=0.0, high=2500.0, size=gene_length)
+            new_population[i] = [h, m, a, d, s, r]
+        else:
+            h = numpy.random.uniform(low=1.0, high=15.0, size=gene_length)
+            h = numpy.sort(h)
+            h[0] = 1.0
+            base_freq = random.uniform(0.0, 2500.0)
+            # The base freq index will be equal to the value num_genes
+            new_population[i] = [h, m, a, d, s, r, base_freq]
+
+    #print(new_population)
 
     return new_population
 
@@ -927,8 +1024,6 @@ def single_island(param_pop, island_weights):
 
     write_generation(new_population)
 
-
-
     # Creating new generations
     for c in range(loops):
 
@@ -994,8 +1089,19 @@ def single_island(param_pop, island_weights):
             # Done this way to give variable types that pyo can use
             new_population[c][z] = new_population[c][z].tolist()
 
+        # instrument mode will need to multiply frequency ratios by base freq
         # Uses sound_generation.py to generate wav files using pyo
-        newSound = sound_generation.instrument(new_population[c][0], new_population[c][1], new_population[c][2], new_population[c][3], new_population[c][4], new_population[c][5], gene_length, names[c], directory_name)
+        if(sound_mode):
+            newSound = sound_generation.instrument(new_population[c][0], new_population[c][1], new_population[c][2], new_population[c][3], new_population[c][4], new_population[c][5], gene_length, names[c], directory_name)
+        else:
+            frequencies = [0] * gene_length
+            for w in range(gene_length):
+                #print(new_population[c])
+                #frequencies[w] = new_population[c][0][w] 
+                frequencies[w] = new_population[c][0][w] * new_population[c][num_genes]
+                #print(frequencies[w])
+            newSound = sound_generation.instrument(frequencies, new_population[c][1], new_population[c][2], new_population[c][3], new_population[c][4], new_population[c][5], gene_length, names[c], directory_name)
+
         newSound.play_note()
 
 
@@ -1084,7 +1190,7 @@ def main():
     # then just loop this part until satisfied
 
     # eventually make this range a variable at the top, more modular
-    for i in range(4):
+    for i in range(2):
 
         # island_1 = single_island(island_1, island_1_weight)
         # island_2 = single_island(island_2, island_2_weight)
@@ -1124,6 +1230,3 @@ def main():
 
 
 main()
-
-
-
