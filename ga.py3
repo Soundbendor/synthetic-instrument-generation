@@ -301,7 +301,7 @@ def check_wobbling(population, scores, weight, island_weights):
                 if(abs(base_freq - population[i][0][j + 1]) < 10):
                     temp_score = temp_score + 1 
             else:
-                if(abs(population[i][0][j + 1] - 1) < 0.1):
+                if(abs(population[i][0][j] - population[i][0][j + 1]) < 0.1):
                     temp_score = temp_score + 1 
 
         scores[i] -= temp_score * weight * island_weights[i]
@@ -534,12 +534,22 @@ def crossover(parents):
     # Create empty 3d array to represent new generation
     new_generation = [[0 for x in range(num_genes)] for y in range(mems_per_pop)]
 
-    # Create empty 2d arrays for new members of population
-    offspring1 = [0 for y in range(num_genes)]
-    offspring2 = [0 for y in range(num_genes)]
+    if(sound_mode):
+        # Create empty 2d arrays for new members of population
+        offspring1 = [0 for y in range(num_genes)]
+        offspring2 = [0 for y in range(num_genes)]
 
-    # Used to reset both offspring
-    blank_slate = [0 for y in range(num_genes)]
+        # Used to reset both offspring
+        blank_slate = [0 for y in range(num_genes)]
+
+    else:
+        # Create empty 2d arrays for new members of population
+        offspring1 = [0 for y in range(num_genes + 1)]
+        offspring2 = [0 for y in range(num_genes + 1)]
+
+        # Used to reset both offspring
+        blank_slate = [0 for y in range(num_genes + 1)]
+
 
 
     # For loop that run the same number of times as there are parents
@@ -595,9 +605,15 @@ def uniform_crossover(parents):
 
     for c in range(num_parents):
 
-        # Create new members of population
-        child1 = [0] * num_genes
-        child2 = [0] * num_genes
+        if(sound_mode):
+            # Create new members of population
+            child1 = [0] * num_genes
+            child2 = [0] * num_genes
+
+        else:
+            # Create new members of population
+            child1 = [0] * (num_genes + 1)
+            child2 = [0] * (num_genes + 1)
 
         # Special case to avoid array out of bounds
         if(c == num_parents - 1):
@@ -606,7 +622,13 @@ def uniform_crossover(parents):
             parent1 = parents[0]
             parent2 = parents[num_parents - 1]
 
-            for i in range(num_genes):
+
+            if(sound_mode):
+                num_loops = num_genes
+            else:
+                num_loops = num_genes + 1
+
+            for i in range(num_loops):
 
                 # Flip a coin to determine which parent is picked
                 coin = random.randint(0, 1)
@@ -642,7 +664,13 @@ def uniform_crossover(parents):
         parent1 = parents[c]
         parent2 = parents[c + 1]
 
-        for i in range(num_genes):
+
+        if(sound_mode):
+                num_loops = num_genes
+            else:
+                num_loops = num_genes + 1
+
+        for i in range(num_loops):
 
             # Flip a coin to determine which parent is picked
             coin = random.randint(0, 1)
@@ -839,6 +867,9 @@ def mutate_gene(population):
     if(c == 0):
         # print("Mutated h!")
         for i in range(gene_length):
+            if(sound_mode == False and i == 0):
+                # This should help avoid mutating the base freq, which should always be 1.0
+                continue
             population[p][c][i] = population[p][c][i] * scalar
 
     elif(c == 1):
