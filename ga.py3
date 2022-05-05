@@ -44,7 +44,7 @@ num_mutation = 2
 selected_mutation = 1
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-dont_generate_files = False
+dont_generate_files = True
 
 # Number of islands in representation
 num_isles = 10
