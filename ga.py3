@@ -26,7 +26,7 @@ loops = 10
 chance = 1
 
 # Used to determine how many fitness helper we have in total
-num_funcs = 12
+num_funcs = 19
 
 # Used to scale how aggresively the mutation function changes the genes
 mutate_scalar = 0.05
@@ -44,7 +44,7 @@ num_mutation = 2
 selected_mutation = 1
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-dont_generate_files = True
+dont_generate_files = False
 
 # Number of islands in representation
 num_isles = 10
@@ -149,6 +149,34 @@ helper.weights[11] = 0.16
 helper.funcs[11] = "check_decreasing_attacks(population, scores, helper.weights[11], island_weights)"
 helper.on_off_switch[11] = True
 
+helper.weights[12] = 2
+helper.funcs[12] = "check_amp_sum(population, scores, helper.weights[12], island_weights)"
+helper.on_off_switch[12] = True
+
+helper.weights[13] = 0.05
+helper.funcs[13] = "check_pads(population, scores, helper.weights[13], island_weights)"
+helper.on_off_switch[13] = True
+
+helper.weights[14] = 0.05
+helper.funcs[14] = "check_stacatos(population, scores, helper.weights[14], island_weights)"
+helper.on_off_switch[14] = True
+
+helper.weights[15] = 0.05
+helper.funcs[15] = "reward_percussive_sounds(population, scores, helper.weights[15], island_weights)"
+helper.on_off_switch[15] = True
+
+helper.weights[16] = 0.0333
+helper.funcs[16] = "reward_transients(population, scores, helper.weights[16], island_weights)"
+helper.on_off_switch[16] = True
+
+helper.weights[17] = 20.0
+helper.funcs[17] = "reward_sparseness(population, scores, helper.weights[17], island_weights)"
+helper.on_off_switch[17] = True
+
+helper.weights[18] = 0.2
+helper.funcs[18] = "avoid_too_quiet(population, scores, helper.weights[18], island_weights)"
+helper.on_off_switch[18] = True
+
 
 # Set up for choosing crossover
 # In main function, will use eval to run one of these functions stored in the list
@@ -209,7 +237,7 @@ def check_bad_amps(population, scores, weight, island_weights):
         amplitude = population[i][1]
 
         for j in range(gene_length):
-            if(amplitude[j] < 0.3):
+            if(amplitude[j] < 0.18):
                 # Increase score if amplitude is not "too loud"
                 temp_score = temp_score + 1
 
@@ -230,6 +258,8 @@ def check_increasing_harmonics(population, scores, weight, island_weights):
     for i in range(mems_per_pop):
         # Takes array of harmonics from population array
         frequency = population[i][0] 
+
+        frequency.sort()
 
         # Current method only checks adjacent harmonics
         for j in range(gene_length - 1):
@@ -301,7 +331,7 @@ def check_wobbling(population, scores, weight, island_weights):
                 if(abs(base_freq - population[i][0][j + 1]) < 10):
                     temp_score = temp_score + 1 
             else:
-                if(abs(population[i][0][j] - population[i][0][j + 1]) < 0.1):
+                if(abs(population[i][0][j + 1] - 1) < 0.1):
                     temp_score = temp_score + 1 
 
         scores[i] -= temp_score * weight * island_weights[i]
@@ -374,9 +404,12 @@ def amps_sum(population, scores, weight, island_weights):
         for j in range(gene_length):
             amp_sum += population[i][1][j]
 
-        while(amp_sum > 1):
+        # while(amp_sum > 1):
+        #     scores[i] -= 1 * weight * island_weights[i]
+        #     amp_sum -= 1
+
+        if(amp_sum > 1):
             scores[i] -= 1 * weight * island_weights[i]
-            amp_sum -= 1
 
     # actually shouldn't need to return scores in helper fitness functions
     return scores
@@ -473,6 +506,184 @@ def check_decreasing_attacks(population, scores, weight, island_weights):
     return scores
 
 
+def check_amp_sum(population, scores, weight, island_weights):
+
+    # checks and rewards sounds that overall have an amplitude less than 1
+
+    amp_sum = 0
+
+    for i in range(mems_per_pop):
+
+        amps = population[i][1]
+
+        for j in (range(gene_length)):
+            amp_sum += amps[j]
+
+        if amp_sum < 1:
+            scores[i] += weight * island_weights[i]
+        amp_sum = 0
+
+    return scores
+
+
+def check_pads(population, scores, weight, island_weights):
+
+    # checks and rewards ADSR envelopes that have long attacks and long release
+
+    # sum of attack and release values
+    AR_sum = 0
+
+    for i in range(mems_per_pop):
+
+        attacks = population[i][2]
+        releases = population[i][5]
+
+        for j in (range(gene_length)):
+            AR_sum += attacks[j] + releases[j]
+
+        
+        scores[i] += AR_sum * weight * island_weights[i]
+        AR_sum = 0
+
+    return scores
+
+
+def check_stacatos(population, scores, weight, island_weights):
+
+    # checks and rewards ADSR envelopes with short attacks and short releases
+
+    # sum of attack and release values
+    A_sum = 0
+    R_sum = 0
+
+    for i in range(mems_per_pop):
+
+        attacks = population[i][2]
+        releases = population[i][5]
+
+        for j in (range(gene_length)):
+            R_sum += releases[j]
+
+            if attacks[j] < 0.05:
+                A_sum += 1
+
+        
+        scores[i] -= R_sum * weight * island_weights[i]
+        scores += A_sum * weight * island_weights[i]
+        A_sum = 0
+        R_sum = 0
+
+    return scores
+
+
+def reward_percussive_sounds(population, scores, weight, island_weights):
+
+    # checks and rewards ADSR envelopes with short attacks and long releases
+
+    # sum of attack and release values
+    A_sum = 0
+    R_sum = 0
+
+    for i in range(mems_per_pop):
+
+        attacks = population[i][2]
+        releases = population[i][5]
+
+        for j in (range(gene_length)):
+            R_sum += releases[j]
+
+            if attacks[j] < 0.05:
+                A_sum += 1
+
+        
+        scores[i] += (R_sum + A_sum) * weight * island_weights[i]
+        A_sum = 0
+        R_sum = 0
+
+    return scores
+
+
+
+def reward_transients(population, scores, weight, island_weights):
+
+    # checks and rewards ADSR envelopes with short sustains and longer decays
+
+    # sum of decay and sustain values
+    D_sum = 0
+    S_sum = 0
+
+    for i in range(mems_per_pop):
+
+        decays = population[i][3]
+        sustains = population[i][4]
+
+        for j in (range(gene_length)):
+            S_sum += sustains[j]
+
+            if decays[j] < 0.05:
+                D_sum += 1
+
+        
+        scores[i] += (D_sum + S_sum) * weight * island_weights[i]
+        D_sum = 0
+        S_sum = 0
+
+    return scores
+
+
+def reward_sparseness(population, scores, weight, island_weights):
+
+    # checks and rewards a more consistent set of amplitudes instead of one central amplitude
+    # uses standard deviation to calculate consistency
+
+    
+
+    for i in range(mems_per_pop):
+        amp_mean = 0
+        temp = 0
+        amps = population[i][1]
+
+        for j in amps:
+            amp_mean += j
+
+        amp_mean /= gene_length
+
+        for j in amps:
+            temp += math.pow(j - amp_mean, 2)
+
+        temp /= gene_length
+        temp = math.sqrt(temp)
+
+        scores[i] -= temp * weight * island_weights[i] 
+
+
+    return scores
+
+
+def avoid_too_quiet(population, scores, weight, island_weights):
+
+    # checks and rewards each amp above a certain threshold 
+
+    temp = 0
+
+    for i in range(mems_per_pop):
+
+        amps = population[i][1]
+
+        for j in amps:
+            if(j > 0.05):
+                temp += 1
+
+        scores[i] += temp * weight * island_weights[i]
+
+        temp = 0
+
+    return scores
+
+
+
+
+
 # Due to the random nature, maybe have it so it's within a range instead of an exact ratio 
 
 def fitness_calc(population, helpers, count, island_weights):
@@ -534,22 +745,12 @@ def crossover(parents):
     # Create empty 3d array to represent new generation
     new_generation = [[0 for x in range(num_genes)] for y in range(mems_per_pop)]
 
-    if(sound_mode):
-        # Create empty 2d arrays for new members of population
-        offspring1 = [0 for y in range(num_genes)]
-        offspring2 = [0 for y in range(num_genes)]
+    # Create empty 2d arrays for new members of population
+    offspring1 = [0 for y in range(num_genes)]
+    offspring2 = [0 for y in range(num_genes)]
 
-        # Used to reset both offspring
-        blank_slate = [0 for y in range(num_genes)]
-
-    else:
-        # Create empty 2d arrays for new members of population
-        offspring1 = [0 for y in range(num_genes + 1)]
-        offspring2 = [0 for y in range(num_genes + 1)]
-
-        # Used to reset both offspring
-        blank_slate = [0 for y in range(num_genes + 1)]
-
+    # Used to reset both offspring
+    blank_slate = [0 for y in range(num_genes)]
 
 
     # For loop that run the same number of times as there are parents
@@ -605,15 +806,9 @@ def uniform_crossover(parents):
 
     for c in range(num_parents):
 
-        if(sound_mode):
-            # Create new members of population
-            child1 = [0] * num_genes
-            child2 = [0] * num_genes
-
-        else:
-            # Create new members of population
-            child1 = [0] * (num_genes + 1)
-            child2 = [0] * (num_genes + 1)
+        # Create new members of population
+        child1 = [0] * num_genes
+        child2 = [0] * num_genes
 
         # Special case to avoid array out of bounds
         if(c == num_parents - 1):
@@ -622,13 +817,7 @@ def uniform_crossover(parents):
             parent1 = parents[0]
             parent2 = parents[num_parents - 1]
 
-
-            if(sound_mode):
-                num_loops = num_genes
-            else:
-                num_loops = num_genes + 1
-
-            for i in range(num_loops):
+            for i in range(num_genes):
 
                 # Flip a coin to determine which parent is picked
                 coin = random.randint(0, 1)
@@ -666,11 +855,12 @@ def uniform_crossover(parents):
 
 
         if(sound_mode):
-                num_loops = num_genes
-            else:
-                num_loops = num_genes + 1
+            num_loops = num_genes
+        else:
+            num_loops = num_genes + 1
 
         for i in range(num_loops):
+
 
             # Flip a coin to determine which parent is picked
             coin = random.randint(0, 1)
@@ -867,9 +1057,6 @@ def mutate_gene(population):
     if(c == 0):
         # print("Mutated h!")
         for i in range(gene_length):
-            if(sound_mode == False and i == 0):
-                # This should help avoid mutating the base freq, which should always be 1.0
-                continue
             population[p][c][i] = population[p][c][i] * scalar
 
     elif(c == 1):
@@ -942,8 +1129,8 @@ def intial_gen():
     for i in range(mems_per_pop):
 
         
-        m = numpy.random.uniform(low=0.0, high=0.5, size=gene_length)
-        a = numpy.random.uniform(low=0.0, high=0.02, size=gene_length)
+        m = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
+        a = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
         d = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
         s = numpy.random.uniform(low=0.0, high=1.0, size=gene_length)
         r = numpy.random.uniform(low=0.0, high=3.0, size=gene_length)
@@ -974,6 +1161,16 @@ def print_generation(gen):
             print(gen[i][j])
 
 
+def print_ratio_generation(gen):
+
+    for i in range(mems_per_pop):
+        print("chromosome {0}".format(i + 1))
+        for j in range(num_genes + 1):
+            print("Gene {0}".format(j + 1))
+            print(gen[i][j])
+
+
+
 def write_generation(gen):
 
     # Writes all genes in a file, useful to verify everything is working as intended
@@ -984,6 +1181,18 @@ def write_generation(gen):
         for j in range(num_genes):
             f.write("Gene {0}\n".format(j + 1))
             
+            f.write("{0}\n".format(gen[i][j]))
+    f.write("-------------------------------------------------------------------------------------------------\n")
+    f.close()
+
+
+def write_ratio_generation(gen):
+
+    f = open("GA_output.txt", "a")
+    for i in range(mems_per_pop):
+        f.write("chromosome {0}\n".format(i + 1))
+        for j in range(num_genes + 1):
+            f.write("Gene {0}\n".format(j + 1))
             f.write("{0}\n".format(gen[i][j]))
     f.write("-------------------------------------------------------------------------------------------------\n")
     f.close()
@@ -1053,7 +1262,10 @@ def single_island(param_pop, island_weights):
     # Write intial population into file
     # FOR TESTING PURPOSE, THIS WILL BE COMMENTED OUT FOR NOW
 
-    write_generation(new_population)
+    if(sound_mode):
+        write_generation(new_population)
+    else:
+        write_ratio_generation(new_population)
 
     # Creating new generations
     for c in range(loops):
@@ -1075,10 +1287,12 @@ def single_island(param_pop, island_weights):
             new_population = eval(mutation_list[selected_mutation])
 
         # Writes data about current generation in a txt file
-        write_generation(new_population)
+        if(sound_mode):
+            write_generation(new_population)
+        else:
+            write_ratio_generation(new_population)
 
 
-    
     # Generating wav file section, seperate from actual GA loop
 
     if(dont_generate_files):
@@ -1163,13 +1377,18 @@ def main():
     # not losing track on each island's weight
     for i in range(num_isles):
         # will eventually make it so each island has an array of weights for each helper function, not just one value
-        #island_weights[i] = random.uniform(0.1, 5.0)
-        weight = numpy.random.uniform(low=0.1, high=5.0, size=gene_length)
+        # will need to experiment with range of weights to see if that causes too much chaos or helps with variation
+        # weight = numpy.random.uniform(low=0.1, high=5.0, size=gene_length)
+        #weight = numpy.random.uniform(low=1.0, high=1.0, size=gene_length)
+
+
+        # for each member having an array of helper weights, maybe have the intial gen here?
+        # and then change it so single_island only takes a population as a parameter??
+
+        weight = numpy.random.uniform(low=0.1, high=10.0, size=gene_length)
         islands[i] = [single_island(empty_pop, weight), weight]
 
-
         # numpy.random.uniform(low=0.0, high=2500.0, size=gene_length)
-
 
     # create intial islands
     # the random.uniform is the random fitness weight that each island will have on top of each fitness helper's individual weight
@@ -1212,7 +1431,10 @@ def main():
 
 
     for i in range(num_isles):
-        write_generation(islands[i][0])
+        if(sound_mode):
+            write_generation(islands[i][0])
+        else:
+            write_ratio_generation(islands[i][0])
     
     #write_generation(island_2)
 
@@ -1221,7 +1443,7 @@ def main():
     # then just loop this part until satisfied
 
     # eventually make this range a variable at the top, more modular
-    for i in range(2):
+    for i in range(3):
 
         # island_1 = single_island(island_1, island_1_weight)
         # island_2 = single_island(island_2, island_2_weight)
@@ -1253,7 +1475,10 @@ def main():
         # write_generation(island_2)
 
         for i in range(num_isles):
-            write_generation(islands[i][0])
+            if(sound_mode):
+                write_generation(islands[i][0])
+            else:
+                write_ratio_generation(islands[i][0])
 
 
 
