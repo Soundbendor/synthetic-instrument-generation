@@ -20,7 +20,8 @@ class instrument:
     def play_note(self):
 
         # Boot up server to play and record sound
-        ser = Server(audio='offline').boot()
+        # TEST change sampling rate to lower, default is 441000
+        ser = Server(sr=16000, audio='offline').boot()
         
         #i think I should actually change this?? actually never mind, directory represents the specific folder in this case but they can be in any order
         file_path = "/Users/johnk/OneDrive/Computer Science/Lab stuff/sounds"

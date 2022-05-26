@@ -26,7 +26,7 @@ loops = 10
 chance = 1
 
 # Used to determine how many fitness helper we have in total
-num_funcs = 19
+num_funcs = 20
 
 # Used to scale how aggresively the mutation function changes the genes
 mutate_scalar = 0.05
@@ -51,6 +51,9 @@ num_isles = 10
 
 # Boolean that switches between sound version (floats) and instrument version (ratios)
 sound_mode = False
+
+# Used for generating wav files so we can better understand the meaningful differences between the sounds
+universal_base_freq = 260
 
 
 # Making an ideal set, used for dummy fitness function
@@ -177,6 +180,10 @@ helper.weights[18] = 0.2
 helper.funcs[18] = "avoid_too_quiet(population, scores, helper.weights[18], island_weights)"
 helper.on_off_switch[18] = True
 
+helper.weights[19] = 1.0
+helper.funcs[19] = "check_decreasing_amps(population, scores, helper.weights[19], island_weights)"
+helper.on_off_switch[19] = True
+
 
 # Set up for choosing crossover
 # In main function, will use eval to run one of these functions stored in the list
@@ -259,7 +266,7 @@ def check_increasing_harmonics(population, scores, weight, island_weights):
         # Takes array of harmonics from population array
         frequency = population[i][0] 
 
-        frequency.sort()
+        #frequency.sort()
 
         # Current method only checks adjacent harmonics
         for j in range(gene_length - 1):
@@ -278,9 +285,7 @@ def check_true_harmonics(population, scores, weight, island_weights):
 
     temp_score = 0
 
-    # for some reason this is looping 16 times instead of 8
-    # ACTUALLY THERE APPEARS TO BE AN INFINITE LOOP somewhere
-    # problem seems to lie with functions that reference base_freq as the 7th element in population array
+    
     for i in range(mems_per_pop):
 
         # Take the first frequency in the harmonics array of one member
@@ -677,6 +682,27 @@ def avoid_too_quiet(population, scores, weight, island_weights):
         scores[i] += temp * weight * island_weights[i]
 
         temp = 0
+
+    return scores
+
+
+def check_decreasing_amps(population, scores, weight, island_weights):
+
+    temp_score = 0
+
+    for i in range(mems_per_pop):
+        # Takes array of harmonics from population array
+        frequency = population[i][0]
+        amplitudes = population[i][1] 
+
+
+        # Current method only checks adjacent harmonics
+        for j in range(gene_length - 1):
+            if(frequency[j] < frequency[j + 1] and amplitudes[j] > amplitudes[j + 1]):
+                temp_score = temp_score + 1
+
+        scores[i] += temp_score * weight * island_weights[i]
+        temp_score = 0
 
     return scores
 
@@ -1136,13 +1162,13 @@ def intial_gen():
         r = numpy.random.uniform(low=0.0, high=3.0, size=gene_length)
 
         if(sound_mode):
-            h = numpy.random.uniform(low=0.0, high=2500.0, size=gene_length)
+            h = numpy.random.uniform(low=50.0, high=2500.0, size=gene_length)
             new_population[i] = [h, m, a, d, s, r]
         else:
             h = numpy.random.uniform(low=1.0, high=15.0, size=gene_length)
             h = numpy.sort(h)
             h[0] = 1.0
-            base_freq = random.uniform(0.0, 2500.0)
+            base_freq = random.uniform(50.0, 170.0)
             # The base freq index will be equal to the value num_genes
             new_population[i] = [h, m, a, d, s, r, base_freq]
 
@@ -1343,7 +1369,9 @@ def single_island(param_pop, island_weights):
             for w in range(gene_length):
                 #print(new_population[c])
                 #frequencies[w] = new_population[c][0][w] 
-                frequencies[w] = new_population[c][0][w] * new_population[c][num_genes]
+
+                #frequencies[w] = new_population[c][0][w] * new_population[c][num_genes]
+                frequencies[w] = new_population[c][0][w] * universal_base_freq
                 #print(frequencies[w])
             newSound = sound_generation.instrument(frequencies, new_population[c][1], new_population[c][2], new_population[c][3], new_population[c][4], new_population[c][5], gene_length, names[c], directory_name)
 
