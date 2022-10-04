@@ -38,15 +38,12 @@ num_crossover = 3
 selected_crossover = 2
 
 # Number of mutation functions
-num_mutation = 2
-
-# Determines which mutation function is used, 0 for gene mutation, 1 for chromosome mutation
-selected_mutation = 1
+num_mutation = 3
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-dont_generate_files = False
+dont_generate_files = True
 
-# Number of islands each generation in representation
+# Number of islands each generation in representation, with current representation should always be an even number
 num_isles = 20
 
 # Boolean that switches between sound version (floats) and instrument version (ratios)
@@ -215,7 +212,8 @@ crossover_list[2] = "deep_uniform_crossover(parents)"
 mutation_list = [0] * num_mutation
 
 mutation_list[0] = "mutate_gene(new_population)"
-mutation_list[1] = "mutate_chromosome(new_population)"
+mutation_list[1] = "mutate_member(new_population)"
+mutation_list[2] = "mutate_individual_weight(new_population)"
 
 
 def dummy_fitness_helper(population, ideal_set, scores, weight, weight_index):
@@ -1148,6 +1146,9 @@ def mutate_gene(population):
     if(c == 0):
         # print("Mutated h!")
         for i in range(gene_length):
+            # Additional handling required for instrument/ratio mode to ignore base frequency
+            if( sound_mode == False and i == 0):
+                continue
             population[p][c][i] = population[p][c][i] * scalar
 
     elif(c == 1):
@@ -1178,9 +1179,9 @@ def mutate_gene(population):
     return population
 
 
-def mutate_chromosome(population):
+def mutate_member(population):
 
-    # Random number generator from 0-7, will decide which chromosome is picked
+    # Random number generator from 0-7, will decide which member is picked
     p = random.randint(0,num_parents - 1)
 
     # Coin flip to determine if scalar increases or decreases values
@@ -1194,10 +1195,32 @@ def mutate_chromosome(population):
 
     for i in range(num_genes):
         for j in range(gene_length):
-            # Additional handling required for instrument mode
+            # Additional handling required for instrument mode to ignore base frequency
             if(sound_mode == False and i == 0 and j == 0):
                 continue
             population[p][i][j] = population[p][i][j] * scalar
+
+
+    return population
+
+
+def mutate_individual_weight(population):
+
+    # Mutate each element in the individual weight array as an attempt to create diversity
+
+    # Random number generator from 0-7, will decide which member is picked to mutate
+    p = random.randint(0,num_parents - 1)
+
+    # Must be in ratio mode since weight array is only created in ratio mode 
+    if(sound_mode == False):
+
+        for i in range(num_funcs):
+
+            # Mutate weight by a random scalar
+            scalar = numpy.random.uniform(0.0, 2.0)
+
+            # The 7 corresponds to the weight array
+            population[p][7][i] = population[p][7][i] * scalar
 
 
     return population
@@ -1358,8 +1381,9 @@ def single_island(param_pop):
         # Uses chance variable at top of file to determine if mutation occurs or not
         p = random.randint(0,chance)
         if(p == 1):
-            # Chooses between list of mutation methods, toggleable at top of file
-            new_population = eval(mutation_list[selected_mutation])
+            # Randomly chooses between list of mutation methods
+            r = random.randint(0,2)
+            new_population = eval(mutation_list[r])
 
 
     # Generating wav file section, seperate from actual GA loop
@@ -1376,14 +1400,17 @@ def single_island(param_pop):
     # Folder name includes the Month, day, year, hour and minute
 
     now = datetime.now()
-    # Can add %S at the end to include seconds as well
-    date_string = now.strftime("%B %d %Y %H %M %S")
+    # Can add %S at the end to include seconds and %f to include millseconds as well
+    date_string = now.strftime("%B %d %Y %H %M %S %f")
 
     directory_name = "Generation "
     directory_name = directory_name + date_string
 
-    # May want to make this more modular, have a var pathname at the top
-    path = os.path.join("/Users/johnk/OneDrive/Computer Science/Lab stuff/sounds", directory_name)
+    # Absolute path style
+    #path = os.path.join("/Users/johnk/OneDrive/Computer Science/Lab stuff/sounds", directory_name)
+
+    # Relative path style
+    path = os.path.join("./sounds", directory_name)
     os.mkdir(path)
 
     # Generating file names
