@@ -47,7 +47,7 @@ dont_generate_files = False
 num_isles = 20
 
 # Boolean that switches between sound version (floats) and instrument version (ratios)
-sound_mode = False
+sound_mode = True
 
 # Used for generating wav files so we can better understand the meaningful differences between the sounds
 universal_base_freq = 260
@@ -242,8 +242,11 @@ def dummy_fitness_helper(population, ideal_set, scores, weight, weight_index):
     
 
         # Make the score the inverse so the larger scores are picked for the mating pool
+        if(sound_mode):
+            scores[i] += (1 / temp_score) * weight
+        else:
         # population[i][num_genes + 1][weight_index] is the individual member weight for this helper function in the weight array
-        scores[i] += (1 / temp_score) * weight * population[i][num_genes + 1][weight_index] 
+            scores[i] += (1 / temp_score) * weight * population[i][num_genes + 1][weight_index] 
         temp_score = 0;
 
     return scores
@@ -266,7 +269,10 @@ def check_bad_amps(population, scores, weight, weight_index):
                 # Increase score if amplitude is not "too loud"
                 temp_score = temp_score + 1
 
-        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp_score * weight 
+        else:
+            scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -291,7 +297,10 @@ def check_increasing_harmonics(population, scores, weight, weight_index):
             if(frequency[j] < frequency[j + 1]):
                 temp_score = temp_score + 1
 
-        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp_score * weight
+        else:
+            scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -324,7 +333,10 @@ def check_true_harmonics(population, scores, weight, weight_index):
                 if((population[i][0][j + 1]).is_integer()):
                     temp_score = temp_score + 1
 
-        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp_score * weight
+        else:
+            scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -351,7 +363,10 @@ def check_wobbling(population, scores, weight, weight_index):
                 if(abs(population[i][0][j + 1] - 1) < 0.1):
                     temp_score = temp_score + 1 
 
-        scores[i] -= temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] -= temp_score * weight
+        else:
+            scores[i] -= temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -378,7 +393,10 @@ def check_octaves(population, scores, weight, weight_index):
                 if(population[i][0][j + 1] == 2.0):
                     temp_score = temp_score + 1
 
-        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp_score * weight
+        else:
+            scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -405,7 +423,10 @@ def check_fifths(population, scores, weight, weight_index):
                 if(population[i][0][j + 1] == 1.5):
                     temp_score = temp_score + 1
 
-        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp_score * weight 
+        else:
+            scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -423,7 +444,10 @@ def amps_sum(population, scores, weight, weight_index):
 
 
         if(amp_sum > 1):
-            scores[i] -= 1 * weight * population[i][num_genes + 1][weight_index]
+            if(sound_mode):
+                scores[i] -= weight 
+            else:
+                scores[i] -= 1 * weight * population[i][num_genes + 1][weight_index]
 
     return scores
 
@@ -472,7 +496,10 @@ def error_off_partial(population, scores, weight, weight_index):
                 temp_sum += pow(population[i][0][j + 1] - nearest_partial, 2)
 
 
-        scores[i] -= math.sqrt(temp_sum) * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] -= math.sqrt(temp_sum) * weight
+        else:
+            scores[i] -= math.sqrt(temp_sum) * weight * population[i][num_genes + 1][weight_index]
 
     return scores
 
@@ -488,7 +515,10 @@ def error_off_amps(population, scores, weight, weight_index):
         for j in range(gene_length - 1):
             temp_sum += pow(population[i][1][j] / 2 - population[i][1][j + 1], 2)
 
-        scores[i] -= math.sqrt(temp_sum) * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] -= math.sqrt(temp_sum) * weight
+        else:
+            scores[i] -= math.sqrt(temp_sum) * weight * population[i][num_genes + 1][weight_index]
 
     return scores       
 
@@ -508,7 +538,10 @@ def check_decreasing_attacks(population, scores, weight, weight_index):
             if(attack[j] > attack[j + 1]):
                 temp_score = temp_score + 1
 
-        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp_score * weight 
+        else:
+            scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -528,7 +561,10 @@ def check_amp_sum(population, scores, weight, weight_index):
             amp_sum += amps[j]
 
         if amp_sum < 1:
-            scores[i] += weight * population[i][num_genes + 1][weight_index]
+            if(sound_mode):
+                scores[i] += weight
+            else:
+                scores[i] += weight * population[i][num_genes + 1][weight_index]
         amp_sum = 0
 
     return scores
@@ -550,7 +586,10 @@ def check_pads(population, scores, weight, weight_index):
             AR_sum += attacks[j] + releases[j]
 
         
-        scores[i] += AR_sum * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += AR_sum * weight
+        else:
+            scores[i] += AR_sum * weight * population[i][num_genes + 1][weight_index]
         AR_sum = 0
 
     return scores
@@ -576,8 +615,16 @@ def check_stacatos(population, scores, weight, weight_index):
                 A_sum += 1
 
         
-        scores[i] -= R_sum * weight * population[i][num_genes + 1][weight_index]
-        scores += A_sum * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += R_sum * weight
+        else:
+            scores[i] -= R_sum * weight * population[i][num_genes + 1][weight_index]
+        
+
+        if(sound_mode):
+            scores[i] += A_sum * weight
+        else:
+            scores[i] += A_sum * weight * population[i][num_genes + 1][weight_index]
         A_sum = 0
         R_sum = 0
 
@@ -604,7 +651,10 @@ def reward_percussive_sounds(population, scores, weight, weight_index):
                 A_sum += 1
 
         
-        scores[i] += (R_sum + A_sum) * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += (R_sum + A_sum) * weight
+        else:
+            scores[i] += (R_sum + A_sum) * weight * population[i][num_genes + 1][weight_index]
         A_sum = 0
         R_sum = 0
 
@@ -632,7 +682,10 @@ def reward_transients(population, scores, weight, weight_index):
                 D_sum += 1
 
         
-        scores[i] += (D_sum + S_sum) * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += (D_sum + S_sum) * weight
+        else:
+            scores[i] += (D_sum + S_sum) * weight * population[i][num_genes + 1][weight_index]
         D_sum = 0
         S_sum = 0
 
@@ -660,7 +713,10 @@ def reward_amp_sparseness(population, scores, weight, weight_index):
         temp /= gene_length
         temp = math.sqrt(temp)
 
-        scores[i] -= temp * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp * weight 
+        else:
+            scores[i] -= temp * weight * population[i][num_genes + 1][weight_index]
 
 
     return scores
@@ -681,7 +737,10 @@ def avoid_too_quiet(population, scores, weight, weight_index):
             if(j > 0.05):
                 temp += 1
 
-        scores[i] += temp * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp * weight 
+        else:
+            scores[i] += temp * weight * population[i][num_genes + 1][weight_index]
 
         temp = 0
 
@@ -703,7 +762,10 @@ def check_decreasing_amps(population, scores, weight, weight_index):
             if(frequency[j] < frequency[j + 1] and amplitudes[j] > amplitudes[j + 1]):
                 temp_score = temp_score + 1
 
-        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        if(sound_mode):
+            scores[i] += temp_score * weight 
+        else:
+            scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
         temp_score = 0
 
     return scores
@@ -721,7 +783,10 @@ def fundamental_freq_amp(population, scores, weight, weight_index):
         for j in range(gene_length - 1):
 
             if amplitude[j + 1] > amplitude[0]:
-                scores[i] -= 0.5 * weight * population[i][num_genes + 1][weight_index]
+                if(sound_mode):
+                    scores[i] -= 0.5 * weight 
+                else:
+                    scores[i] -= 0.5 * weight * population[i][num_genes + 1][weight_index]
 
     return scores
 
@@ -740,7 +805,10 @@ def inverse_squared_amp(population, scores, weight, weight_index):
 
             ideal_amp = 1 / pow(j + 1, 2)
             temp_score = abs(ideal_amp - amplitude[j])
-            scores[i] -= temp_score * weight * population[i][num_genes + 1][weight_index]
+            if(sound_mode):
+                scores[i] -= temp_score * weight
+            else:
+                scores[i] -= temp_score * weight * population[i][num_genes + 1][weight_index]
 
     return scores
 
@@ -759,7 +827,10 @@ def reward_freq_sparseness(population, scores, weight, weight_index):
 
             if(frequencies[j + 1] - frequencies[j] < 0.5):
 
-                scores[i] -= 0.5 * weight * population[i][num_genes + 1][weight_index]
+                if(sound_mode):
+                    scores[i] -= 0.5 * weight
+                else:
+                    scores[i] -= 0.5 * weight * population[i][num_genes + 1][weight_index]
 
     return scores
 
