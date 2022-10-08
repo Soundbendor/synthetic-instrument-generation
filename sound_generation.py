@@ -20,7 +20,7 @@ class instrument:
     def play_note(self):
 
         # Boot up server to play and record sound
-        # TEST change sampling rate to lower, default is 441000
+        # TEST change sampling rate to lower, default is 44100
         ser = Server(sr=16000, audio='offline').boot()
         
         #i think I should actually change this?? actually never mind, directory represents the specific folder in this case but they can be in any order
@@ -31,24 +31,27 @@ class instrument:
         ser.recordOptions(dur=5, filename=path, fileformat=0, sampletype=1 )
 
         # Create empty arrays that will be filled out using passed in parameters
-        envs = [0] * self.num
-        sines = [0] * self.num
+        envsL = [0] * self.num
+        envsR = [0] * self.num
+        sinesL = [0] * self.num
+        sinesR = [0] * self.num
 
         # Begins recording to generate wav file
         ser.recstart()
-
+        
         # Create ADSR envelope and Sine wave that will be played and recorded
         for n in range(self.num):
-            envs[n] = Adsr(attack = self.a[n], decay = self.d[n], sustain = self.s[n], release = self.r[n], dur = 5)
-            sines[n] = Sine(freq = self.harms[n], mul = envs[n] * self.amps[n])
-            #sines[n] = Sine(freq = self.harms[n], mul = (envs[n] * self.amps[n])/2) 
-            sines[n].out()
-            envs[n].play()
+            envsL[n] = Adsr(attack = self.a[n], decay = self.d[n], sustain = self.s[n], release = self.r[n], dur = 5)
+            envsR[n] = Adsr(attack = self.a[n], decay = self.d[n], sustain = self.s[n], release = self.r[n], dur = 5)
+            sinesL[n] = Sine(freq = self.harms[n], mul = envsL[n] * self.amps[n])
+            sinesR[n] = Sine(freq = self.harms[n], mul = envsR[n] * self.amps[n])
+            sinesL[n].out(0)
+            sinesR[n].out(1)
+            envsL[n].play()
+            envsR[n].play()
 
         # Stops recording
         ser.recstop()
-
-
 
         ser.start()
 

@@ -47,7 +47,7 @@ dont_generate_files = False
 num_isles = 20
 
 # Boolean that switches between sound version (floats) and instrument version (ratios)
-sound_mode = True
+sound_mode = False
 
 # Used for generating wav files so we can better understand the meaningful differences between the sounds
 universal_base_freq = 260
@@ -847,7 +847,7 @@ def check_multiples_band(population, scores, weight, weight_index):
 
         for j in range(gene_length - 1):
             if(
-                ((population[i][0][j + 1]) > population[i][0][j + 1].round() - 0.05) or
+                ((population[i][0][j + 1]) > population[i][0][j + 1].round() - 0.05) and
                 ((population[i][0][j + 1]) < population[i][0][j + 1].round() + 0.05)
             ):
                 temp_score = temp_score + 1
