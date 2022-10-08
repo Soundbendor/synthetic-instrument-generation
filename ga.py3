@@ -777,7 +777,7 @@ def check_multiples_band(population, scores, weight, weight_index):
         for j in range(gene_length - 1):
             if(
                 ((population[i][0][j + 1]) > population[i][0][j + 1].round() - 0.05) or
-                ((population[i][0][j + 1]) > population[i][0][j + 1].round() + 0.05)
+                ((population[i][0][j + 1]) < population[i][0][j + 1].round() + 0.05)
             ):
                 temp_score = temp_score + 1
 
