@@ -24,7 +24,7 @@ class instrument:
         ser = Server(sr=16000, audio='offline').boot()
         
         #i think I should actually change this?? actually never mind, directory represents the specific folder in this case but they can be in any order
-        file_path = "/Users/bradl"
+        file_path = ".\sounds"
 
         # Includes the absolute filepath, the specific folder and the new file name
         path = os.path.join(file_path, self.directory, self.filename)
@@ -47,6 +47,7 @@ class instrument:
 
         # Stops recording
         ser.recstop()
+
 
 
         ser.start()

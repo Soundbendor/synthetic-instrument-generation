@@ -26,7 +26,7 @@ loops = 10
 chance = 1
 
 # Used to determine how many fitness helper we have in total
-num_funcs = 23
+num_funcs = 24
 
 # Used to scale how aggresively the mutation function changes the genes
 mutate_scalar = 0.05
@@ -41,7 +41,7 @@ selected_crossover = 2
 num_mutation = 3
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-dont_generate_files = True
+dont_generate_files = False
 
 # Number of islands each generation in representation, with current representation should always be an even number
 num_isles = 20
@@ -194,6 +194,10 @@ helper.on_off_switch[21] = True
 helper.weights[22] = 0.6666667
 helper.funcs[22] = "reward_freq_sparseness(population, scores, helper.weights[22], 22)"
 helper.on_off_switch[22] = True
+
+helper.weights[23] = 0.6666667
+helper.funcs[23] = "check_multiples_band(population, scores, helper.weights[23], 23)"
+helper.on_off_switch[23] = True
 
 
 # Set up for choosing crossover
@@ -756,6 +760,29 @@ def reward_freq_sparseness(population, scores, weight, weight_index):
             if(frequencies[j + 1] - frequencies[j] < 0.5):
 
                 scores[i] -= 0.5 * weight * population[i][num_genes + 1][weight_index]
+
+    return scores
+
+def check_multiples_band(population, scores, weight, weight_index):
+    
+    # Favors partials that are within given band range of multiples of fundamental
+    temp_score = 0
+
+    bandwidth = 0.05
+
+    for i in range(mems_per_pop):
+
+        base_freq = population[i][num_genes]
+
+        for j in range(gene_length - 1):
+            if(
+                ((population[i][0][j + 1]) > population[i][0][j + 1].round() - 0.05) or
+                ((population[i][0][j + 1]) > population[i][0][j + 1].round() + 0.05)
+            ):
+                temp_score = temp_score + 1
+
+        scores[i] += temp_score * weight * population[i][num_genes + 1][weight_index]
+        temp_score = 0
 
     return scores
 
@@ -1402,10 +1429,8 @@ def single_island(param_pop):
     now = datetime.now()
     # Can add %S at the end to include seconds and %f to include millseconds as well
     date_string = now.strftime("%B %d %Y %H %M %S %f")
-
     directory_name = "Generation "
     directory_name = directory_name + date_string
-
     # Absolute path style
     #path = os.path.join("/Users/johnk/OneDrive/Computer Science/Lab stuff/sounds", directory_name)
 
