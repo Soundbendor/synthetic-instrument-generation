@@ -31,7 +31,13 @@ num_funcs = 24
 # Used to scale how aggresively the mutation function changes the genes
 mutate_scalar = 0.05
 
-# Number of crossover function
+# Number of selection functions
+num_selection = 3
+
+# Determines which crossover function is used, 0 for tournament, 1 for rank, 2 for variety
+selected_selection = 0
+
+# Number of crossover functions
 num_crossover = 3
 
 # Determines which crossover function is used, 0 for midpoint, 1 for uniform, 2 for deep uniform
@@ -41,7 +47,7 @@ selected_crossover = 2
 num_mutation = 3
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-dont_generate_files = False
+dont_generate_files = True
 
 # Number of islands each generation in representation, with current representation should always be an even number
 num_isles = 20
@@ -198,6 +204,16 @@ helper.on_off_switch[22] = True
 helper.weights[23] = 0.6666667
 helper.funcs[23] = "check_multiples_band(population, scores, helper.weights[23], 23)"
 helper.on_off_switch[23] = True
+
+
+# Set up for choosing selection
+# In main function, will use eval to run one of these functions stored in the list
+
+selection_list = [0] * num_selection
+
+selection_list[0] = "tournament_selection(new_population, fit_scores)"
+selection_list[1] = "rank_selection(new_population, fit_scores)"
+selection_list[2] = "variety_selection(new_population, fit_scores)"
 
 
 # Set up for choosing crossover
@@ -883,9 +899,9 @@ def fitness_calc(population, helpers, count):
     return scores
 
 
-def pick_matingpool(population, scores):
+def tournament_selection(population, scores):
 
-    # Picks best parents sort of like tournament style
+    # Picks best parents sort of like tournament style with a bracket
 
     # Stores the parents that will be used to make new generation
     matingpool = [0] * num_parents
@@ -903,6 +919,71 @@ def pick_matingpool(population, scores):
         j = j + 1
 
     return matingpool
+
+
+def rank_selection(population, scores):
+
+    # Picks the best parents purely based on the top scores
+
+    matingpool = [0] * num_parents
+
+    for i in range(num_parents):
+        # Stores index of the max score each loop
+        index_of_max = 0
+        latest_max = 0
+
+        for j in range(len(scores)):
+
+            if(scores[j] > latest_max):
+                # Index of maximum
+                index_of_max = j
+                latest_max = scores[j]
+
+        # Zeroes out the maximums score so it the loop can find the other highest scores
+        scores[index_of_max] = 0
+        # Adds the member with the latest maximum score to become parents
+
+        matingpool[i] = population[index_of_max]
+
+    return matingpool
+
+
+
+def variety_selection(population, scores):
+
+    # Picks the most different members in the list (which should hopefully
+    # be those with the most different scores) to try and create more diverse populations
+
+    matingpool = [0] * num_parents
+
+    temp_scores = scores
+
+    temp_scores.sort()
+
+    # Used to determine number of loops and indexing
+    t = num_parents // 2
+
+    maxs = [0] * t
+    mins = [0] * t
+
+    for i in range(t):
+
+        # Finds the maxiumum and minimum scores
+        maxs[i] = temp_scores[0]
+        mins[i] = temp_scores[t -1 - i]
+
+    # Used to index through matingpool array
+    j = 0
+    for k in range(t):
+        # Finds the index of the maximum and minimum scores in the scores array
+        # and adds them to the matingpool so they become parents
+        matingpool[j] = population[scores.index(maxs[k])]
+        matingpool[j + 1] = population[scores.index(mins[k])]
+        j += 2
+
+
+    return matingpool
+
 
 
 def crossover(parents):
@@ -1470,11 +1551,17 @@ def single_island(param_pop):
         fit_scores = fitness_calc(new_population, helper, c)
 
         # Determintes which chromosomes will be used as parents
-        parents = pick_matingpool(new_population, fit_scores)
+        # Chooses between list of selection methods, toggleable at top of file
+        parents = eval(selection_list[selected_selection])
 
         # Creates new generation using parents
         # Chooses between list of crossover methods, toggleable at top of file
         new_population = eval(crossover_list[selected_crossover])
+
+        # Shuffles around the order members are in array without mixing up their individual data 
+        # This is done because otherwise certain selection functions will always end up comparing children
+        # from the same parent, so things should be more mixed around so that doesn't happen as often
+        random.shuffle(new_population)
 
         # Uses chance variable at top of file to determine if mutation occurs or not
         p = random.randint(0,chance)
