@@ -47,7 +47,7 @@ selected_crossover = 2
 num_mutation = 3
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-dont_generate_files = True
+dont_generate_files = False
 
 # Number of islands each generation in representation, with current representation should always be an even number
 num_isles = 20

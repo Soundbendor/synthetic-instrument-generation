@@ -64,23 +64,22 @@ def error_off_partial(population, scores, weight):
 
 
 def error_off_amps(population, scores, weight):
-
+    
     # Rewards members that have frequencies that are closer to partials
 
     for i in range(1):
 
         temp_sum = 0
 
-        for j in range(9):
-            temp_sum += pow((population[i][1][j] / 2) - population[i][1][j + 1], 2)
+        for j in range(8):
+            temp_sum += pow(population[i][1][j] / 2 - population[i][1][j + 1], 2)
 
-            # print(temp_sum)
+        if(sound_mode):
+            scores[i] -= math.sqrt(temp_sum) * weight
+        else:
+            scores[i] -= math.sqrt(temp_sum) * weight
 
-        # Use inverse of score because a bigger sum means a larger off error which is bad
-        # The difference is smaller, so this will skew the results so make sure weight is low
-        scores[i] -= temp_sum * weight
-
-    return scores       
+    return scores           
 
 
 def amps_sum(population, scores, weight):
@@ -201,7 +200,7 @@ def check_true_harmonics(population, scores, weight):
                 #print(int(population[i][0][j + 1]))
                 #print(int(base_freq))
             else:
-                if((population[i][0][j + 1]).is_integer()):
+                if(population[i][0][j + 1] % 1 == 0.0):
                     temp_score = temp_score + 1
 
         scores[i] += temp_score * weight 
@@ -362,7 +361,7 @@ def inverse_squared_amp(population, scores, weight):
         for j in range(9):
 
             ideal_amp = 1 / pow(j + 1, 2)
-            temp_score = abs(ideal_amp - amplitude[i])
+            temp_score = abs(ideal_amp - amplitude[j])
             if(sound_mode):
                 scores[i] -= temp_score * weight
             else:
@@ -674,7 +673,6 @@ def check_bad_amps(population, scores, weight):
     for i in range(1):
         # Takes array of amplitudes from population array
         amplitude = population[i][0]
-
         for j in range(9):
             if(amplitude[j] < 0.18):
                 # Increase score if amplitude is not "too loud"
