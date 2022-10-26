@@ -32,10 +32,10 @@ num_funcs = 24
 mutate_scalar = 0.05
 
 # Number of selection functions
-num_selection = 3
+num_selection = 5
 
-# Determines which crossover function is used, 0 for tournament, 1 for rank, 2 for variety
-selected_selection = 0
+# Determines which crossover function is used, 0 for tournament, 1 for elitism, 2 for variety, 3 for roulette, 4 for rank
+selected_selection = 4
 
 # Number of crossover functions
 num_crossover = 3
@@ -212,8 +212,10 @@ helper.on_off_switch[23] = True
 selection_list = [0] * num_selection
 
 selection_list[0] = "tournament_selection(new_population, fit_scores)"
-selection_list[1] = "rank_selection(new_population, fit_scores)"
+selection_list[1] = "elitism_selection(new_population, fit_scores)"
 selection_list[2] = "variety_selection(new_population, fit_scores)"
+selection_list[3] = "roulette_selection(new_population, fit_scores)"
+selection_list[4] = "rank_selection(new_population, fit_scores)"
 
 
 # Set up for choosing crossover
@@ -920,7 +922,7 @@ def tournament_selection(population, scores):
     return matingpool
 
 
-def rank_selection(population, scores):
+def elitism_selection(population, scores):
 
     # Picks the best parents purely based on the top scores
 
@@ -968,8 +970,11 @@ def variety_selection(population, scores):
     for i in range(t):
 
         # Finds the maxiumum and minimum scores
-        maxs[i] = temp_scores[0]
-        mins[i] = temp_scores[t -1 - i]
+        maxs[i] = temp_scores[i]
+        mins[i] = temp_scores[mems_per_pop - 1 - i] 
+
+        # maxs[i] = temp_scores[0]
+        # mins[i] = temp_scores[t - 1 - i]
 
     # Used to index through matingpool array
     j = 0
@@ -980,6 +985,88 @@ def variety_selection(population, scores):
         matingpool[j + 1] = population[scores.index(mins[k])]
         j += 2
 
+
+    return matingpool
+
+
+def roulette_selection(population, scores):
+
+    # Sum up all the scores to get the upper bound of the roulette wheel
+    maximum = 0
+    for i in scores:
+        maximum += i
+
+    matingpool = []
+
+    # Keeps track of selected parents indices
+    mate_index = []
+
+    for k in range(num_parents):
+
+        wheel = random.uniform(0, maximum)
+        curr = 0
+
+        for j in range(len(scores)):
+            curr += scores[j] 
+            if curr > wheel and j not in mate_index:
+                mate_index.append(j)
+                break
+
+    c = 0
+    # This accounts for edge cases when not enough elements are added to mate_index
+    while(len(mate_index) < 4):
+        if c not in mate_index:
+            mate_index.append(c)
+        c += 1
+
+    # Using the indices in mate_index, matingpool is filled with the selected parents
+    for p in range(num_parents):
+        matingpool.append(population[mate_index[p]])
+
+    return matingpool
+
+
+def rank_selection(population, scores):
+
+    # Assigns rank and then performs roulette selection
+
+    matingpool = []
+
+    temp_scores = scores
+
+    # Sorts in descending order instead of ascending order
+    temp_scores.sort(reverse=True)
+
+    # Sum up all the scores to get the upper bound of the roulette wheel
+    maximum = 0
+    for i in scores:
+        maximum += i
+
+    # Keeps track of selected parents indices
+    mate_index = []
+
+    for k in range(num_parents):
+
+        wheel = random.uniform(0, maximum)
+        curr = 0
+
+        for j in range(len(temp_scores)):
+            curr += temp_scores[j] 
+            if curr > wheel and j not in mate_index:
+                # returns the index of scores that corresponds to the element in the sorted scores
+                mate_index.append(scores.index(temp_scores[j]))
+                break
+
+    c = 0
+    # This accounts for edge cases when not enough elements are added to mate_index
+    while(len(mate_index) < 4):
+        if c not in mate_index:
+            mate_index.append(c)
+        c += 1
+
+    # Using the indices in mate_index, matingpool is filled with the selected parents
+    for p in range(num_parents):
+        matingpool.append(population[mate_index[p]])
 
     return matingpool
 
