@@ -20,7 +20,10 @@ num_genes = 6
 gene_length = 10
 
 # Number of generations made on a single island before cross mingling occurs
-loops = 10
+gen_loops = 10
+
+# Number of times islands swap members and run generations
+island_loops = 3
 
 # Used to determine chance of mutation occurence in each generation
 chance = 1
@@ -887,12 +890,12 @@ def fitness_calc(population, helpers, count):
         if(helper.on_off_switch[i]):
             eval(helper.funcs[i])
 
-        if(count == (loops - 1)):
+        if(count == (gen_loops - 1)):
             # for the future, it may be useful to show scores of each member after each fitness helper as an alternative
             write_helper_score(scores, i)
 
 
-    if(count == (loops - 1)):
+    if(count == (gen_loops - 1)):
         f = open("GA_fitness_scores.txt", "a")
         f.write("---------------------------------------------------\n")
         f.close()
@@ -1242,6 +1245,9 @@ def deep_uniform_crossover (parents):
 
     for c in range(num_parents):
 
+        # This code is for testing purposes, will eventually delete
+        #print(parents)
+
         # New children created this way to keep it a numpy type list
         # This allows the main function to be more modular later on
 
@@ -1270,9 +1276,9 @@ def deep_uniform_crossover (parents):
         w2 = numpy.random.uniform(low=0.0, high=10.0, size=num_funcs)
 
         if(sound_mode):
-            child2 = [harms, amps, a, d, s, r]
+            child2 = [harms2, amps2, a2, d2, s2, r2]
         else:
-            child2 = [harms, amps, a, d, s, r, base_freq, w]
+            child2 = [harms2, amps2, a2, d2, s2, r2, base_freq, w2]
 
         if(c == num_parents - 1):
 
@@ -1331,7 +1337,11 @@ def deep_uniform_crossover (parents):
             # z = z + 1
             new_generation[z + 1] = child2
             z = z + 2
-            break
+            
+            # used to have a break statement, did not break out all of loops
+            # so instead a return was used to exit out of the function properly
+
+            return new_generation
 
         # Set each parent using parents array
         parent1 = parents[c]
@@ -1386,7 +1396,6 @@ def deep_uniform_crossover (parents):
         # z = z + 1
         new_generation[z + 1] = child2
         z = z + 2
-
 
 
     return new_generation
@@ -1631,7 +1640,7 @@ def single_island(param_pop):
     new_population = param_pop
 
     # Creating new generations
-    for c in range(loops):
+    for c in range(gen_loops):
 
         # Calculates fitness scores using helper functions
         fit_scores = fitness_calc(new_population, helper, c)
@@ -1663,7 +1672,7 @@ def single_island(param_pop):
         return new_population
 
 
-    if(c != (loops - 1)):
+    if(c != (gen_loops - 1)):
         return new_population
 
 
@@ -1761,7 +1770,7 @@ def main():
             write_ratio_generation(islands[i])
     
     # Repeats basically everything above except with existing islands instead of making new ones
-    for i in range(3):
+    for i in range(island_loops):
 
         for i in range(num_isles):
             islands[i] = single_island(islands[i])
