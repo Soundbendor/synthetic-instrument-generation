@@ -26,7 +26,10 @@ max_score = gene_length
 abs_range = 1
 
 # Number of generations made on a single island before cross mingling occurs
-loops = 10
+gen_loops = 10
+
+# Number of times islands swap members and run generations
+island_loops = 3
 
 # Used to determine chance of mutation occurence in each generation
 chance = 1
@@ -38,10 +41,10 @@ num_funcs = 24
 mutate_scalar = 0.05
 
 # Number of selection functions
-num_selection = 3
+num_selection = 5
 
-# Determines which crossover function is used, 0 for tournament, 1 for rank, 2 for variety
-selected_selection = 0
+# Determines which crossover function is used, 0 for tournament, 1 for elitism, 2 for variety, 3 for roulette, 4 for rank
+selected_selection = 4
 
 # Number of crossover functions
 num_crossover = 3
@@ -226,8 +229,10 @@ helper.on_off_switch[23] = True
 selection_list = [0] * num_selection
 
 selection_list[0] = "tournament_selection(new_population, fit_scores)"
-selection_list[1] = "rank_selection(new_population, fit_scores)"
+selection_list[1] = "elitism_selection(new_population, fit_scores)"
 selection_list[2] = "variety_selection(new_population, fit_scores)"
+selection_list[3] = "roulette_selection(new_population, fit_scores)"
+selection_list[4] = "rank_selection(new_population, fit_scores)"
 
 
 # Set up for choosing crossover
@@ -923,7 +928,7 @@ def fitness_calc(population, helpers, count):
         if(helper.on_off_switch[i]):
             eval(helper.funcs[i])
 
-        if(count == (loops - 1)):
+        if(count == (gen_loops - 1)):
             # for the future, it may be useful to show scores of each member after each fitness helper as an alternative
             write_helper_score(scores, i)
 
@@ -957,7 +962,7 @@ def tournament_selection(population, scores):
     return matingpool
 
 
-def rank_selection(population, scores):
+def elitism_selection(population, scores):
 
     # Picks the best parents purely based on the top scores
 
@@ -1005,8 +1010,11 @@ def variety_selection(population, scores):
     for i in range(t):
 
         # Finds the maxiumum and minimum scores
-        maxs[i] = temp_scores[0]
-        mins[i] = temp_scores[t -1 - i]
+        maxs[i] = temp_scores[i]
+        mins[i] = temp_scores[mems_per_pop - 1 - i] 
+
+        # maxs[i] = temp_scores[0]
+        # mins[i] = temp_scores[t - 1 - i]
 
     # Used to index through matingpool array
     j = 0
@@ -1017,6 +1025,88 @@ def variety_selection(population, scores):
         matingpool[j + 1] = population[scores.index(mins[k])]
         j += 2
 
+
+    return matingpool
+
+
+def roulette_selection(population, scores):
+
+    # Sum up all the scores to get the upper bound of the roulette wheel
+    maximum = 0
+    for i in scores:
+        maximum += i
+
+    matingpool = []
+
+    # Keeps track of selected parents indices
+    mate_index = []
+
+    for k in range(num_parents):
+
+        wheel = random.uniform(0, maximum)
+        curr = 0
+
+        for j in range(len(scores)):
+            curr += scores[j] 
+            if curr > wheel and j not in mate_index:
+                mate_index.append(j)
+                break
+
+    c = 0
+    # This accounts for edge cases when not enough elements are added to mate_index
+    while(len(mate_index) < 4):
+        if c not in mate_index:
+            mate_index.append(c)
+        c += 1
+
+    # Using the indices in mate_index, matingpool is filled with the selected parents
+    for p in range(num_parents):
+        matingpool.append(population[mate_index[p]])
+
+    return matingpool
+
+
+def rank_selection(population, scores):
+
+    # Assigns rank and then performs roulette selection
+
+    matingpool = []
+
+    temp_scores = scores
+
+    # Sorts in descending order instead of ascending order
+    temp_scores.sort(reverse=True)
+
+    # Sum up all the scores to get the upper bound of the roulette wheel
+    maximum = 0
+    for i in scores:
+        maximum += i
+
+    # Keeps track of selected parents indices
+    mate_index = []
+
+    for k in range(num_parents):
+
+        wheel = random.uniform(0, maximum)
+        curr = 0
+
+        for j in range(len(temp_scores)):
+            curr += temp_scores[j] 
+            if curr > wheel and j not in mate_index:
+                # returns the index of scores that corresponds to the element in the sorted scores
+                mate_index.append(scores.index(temp_scores[j]))
+                break
+
+    c = 0
+    # This accounts for edge cases when not enough elements are added to mate_index
+    while(len(mate_index) < 4):
+        if c not in mate_index:
+            mate_index.append(c)
+        c += 1
+
+    # Using the indices in mate_index, matingpool is filled with the selected parents
+    for p in range(num_parents):
+        matingpool.append(population[mate_index[p]])
 
     return matingpool
 
@@ -1191,6 +1281,9 @@ def deep_uniform_crossover (parents):
 
     for c in range(num_parents):
 
+        # This code is for testing purposes, will eventually delete
+        #print(parents)
+
         # New children created this way to keep it a numpy type list
         # This allows the main function to be more modular later on
 
@@ -1220,9 +1313,9 @@ def deep_uniform_crossover (parents):
         
 
         if(sound_mode):
-            child2 = [harms, amps, a, d, s, r]
+            child2 = [harms2, amps2, a2, d2, s2, r2]
         else:
-            child2 = [harms, amps, a, d, s, r, base_freq, w]
+            child2 = [harms2, amps2, a2, d2, s2, r2, base_freq, w2]
 
         if(c == num_parents - 1):
             # Special case that helps avoid array out of bounds error
@@ -1280,7 +1373,11 @@ def deep_uniform_crossover (parents):
             # z = z + 1
             new_generation[z + 1] = child2
             z = z + 2
-            break
+            
+            # used to have a break statement, did not break out all of loops
+            # so instead a return was used to exit out of the function properly
+
+            return new_generation
 
         # Set each parent using parents array
         parent1 = parents[c]
@@ -1335,7 +1432,6 @@ def deep_uniform_crossover (parents):
         # z = z + 1
         new_generation[z + 1] = child2
         z = z + 2
-
 
 
     return new_generation
@@ -1612,7 +1708,7 @@ def single_island(param_pop):
         return new_population
 
 
-    if(c != (loops - 1)):
+    if(c != (gen_loops - 1)):
         return new_population
 
 
@@ -1714,7 +1810,7 @@ def main():
             write_ratio_generation(islands[i])
     
     # Repeats basically everything above except with existing islands instead of making new ones
-    for i in range(3):
+    for i in range(island_loops):
 
         for i in range(num_isles):
             islands[i] = single_island(islands[i])
