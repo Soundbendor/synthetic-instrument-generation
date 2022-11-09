@@ -932,7 +932,7 @@ def fitness_calc(population, helpers, count):
             # for the future, it may be useful to show scores of each member after each fitness helper as an alternative
             write_helper_score(scores, i)
 
-    if(count == (loops - 1)):
+    if(count == (gen_loops - 1)):
         f = open("GA_fitness_scores.txt", "a")
         f.write("---------------------------------------------------\n")
         f.close()
