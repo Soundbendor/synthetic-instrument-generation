@@ -187,15 +187,15 @@ helper.funcs[14] = "check_stacatos(population, scores, helper.weights[14], 14)"
 helper.on_off_switch[14] = True
 
 helper.weights[15] = 0.05
-helper.funcs[15] = "reward_percussive_sounds(population, scores, helper.weights[15], 15)"
+helper.funcs[15] = "check_percussive_sounds(population, scores, helper.weights[15], 15)"
 helper.on_off_switch[15] = True
 
 helper.weights[16] = 0.0333
-helper.funcs[16] = "reward_transients(population, scores, helper.weights[16], 16)"
+helper.funcs[16] = "check_transients(population, scores, helper.weights[16], 16)"
 helper.on_off_switch[16] = True
 
 helper.weights[17] = 20.0
-helper.funcs[17] = "reward_amp_sparseness(population, scores, helper.weights[17], 17)"
+helper.funcs[17] = "check_amp_sparseness(population, scores, helper.weights[17], 17)"
 helper.on_off_switch[17] = True
 
 helper.weights[18] = 0.2
@@ -215,7 +215,7 @@ helper.funcs[21] = "inverse_squared_amp(population, scores, helper.weights[21], 
 helper.on_off_switch[21] = True
 
 helper.weights[22] = 0.6666667
-helper.funcs[22] = "reward_freq_sparseness(population, scores, helper.weights[22], 22)"
+helper.funcs[22] = "check_freq_sparseness(population, scores, helper.weights[22], 22)"
 helper.on_off_switch[22] = True
 
 helper.weights[23] = 0.6666667
@@ -584,7 +584,7 @@ def check_decreasing_attacks(population, scores, weight, weight_index):
         # Current method only checks adjacent harmonics
         for j in range(gene_length - 1):
             if(attack[j] > attack[j + 1]):
-                temp_score = temp_score + 1
+                temp_score += 1
                 
         temp_score /= max_score
         
@@ -625,7 +625,8 @@ def check_pads(population, scores, weight, weight_index):
     # checks and rewards ADSR envelopes that have long attacks and long release
 
     # sum of attack and release values
-    AR_sum = 0
+    A_sum = 0
+    R_sum = 0
 
     for i in range(mems_per_pop):
 
@@ -633,15 +634,26 @@ def check_pads(population, scores, weight, weight_index):
         releases = population[i][5]
 
         for j in (range(gene_length)):
-            AR_sum += attacks[j] + releases[j]
+            if attacks[j] > 0.15:
+                A_sum += 1
+            if releases[j] > 2.25:
+                R_sum += 1
 
-        #print(AR_sum)
+        A_sum /= max_score
+        R_sum /= max_score
 
         if(sound_mode):
-            scores[i] += AR_sum * weight
+            scores[i] += R_sum * weight
         else:
-            scores[i] += AR_sum * weight * population[i][num_genes + 1][weight_index]
-        AR_sum = 0
+            scores[i] += R_sum * weight * population[i][num_genes + 1][weight_index]
+        
+        if(sound_mode):
+            scores[i] += A_sum * weight
+        else:
+            scores[i] += A_sum * weight * population[i][num_genes + 1][weight_index]
+
+        A_sum = 0
+        R_sum = 0
 
     return scores
 
@@ -660,10 +672,13 @@ def check_stacatos(population, scores, weight, weight_index):
         releases = population[i][5]
 
         for j in (range(gene_length)):
-            R_sum += releases[j]
-
+            if releases[j] < 0.75:
+                R_sum += 1
             if attacks[j] < 0.05:
                 A_sum += 1
+        
+        A_sum /= max_score
+        R_sum /= max_score
         
         if(sound_mode):
             scores[i] += R_sum * weight
@@ -680,7 +695,7 @@ def check_stacatos(population, scores, weight, weight_index):
     return scores
 
 
-def reward_percussive_sounds(population, scores, weight, weight_index):
+def check_percussive_sounds(population, scores, weight, weight_index):
 
     # checks and rewards ADSR envelopes with short attacks and long releases
 
@@ -694,11 +709,14 @@ def reward_percussive_sounds(population, scores, weight, weight_index):
         releases = population[i][5]
 
         for j in (range(gene_length)):
-            R_sum += releases[j]
+            if releases[j] > 2.25:
+                R_sum += 1
 
             if attacks[j] < 0.05:
                 A_sum += 1
 
+        A_sum /= max_score
+        R_sum /= max_score
         
         if(sound_mode):
             scores[i] += (R_sum + A_sum) * weight
@@ -711,7 +729,7 @@ def reward_percussive_sounds(population, scores, weight, weight_index):
 
 
 
-def reward_transients(population, scores, weight, weight_index):
+def check_transients(population, scores, weight, weight_index):
 
     # checks and rewards ADSR envelopes with short sustains and longer decays
 
@@ -725,11 +743,14 @@ def reward_transients(population, scores, weight, weight_index):
         sustains = population[i][4]
 
         for j in (range(gene_length)):
-            S_sum += sustains[j]
+            if sustains[j] > 2.25:
+                S_sum += 1
 
             if decays[j] < 0.05:
                 D_sum += 1
 
+        S_sum /= max_score
+        D_sum /= max_score
         
         if(sound_mode):
             scores[i] += (D_sum + S_sum) * weight
@@ -741,7 +762,7 @@ def reward_transients(population, scores, weight, weight_index):
     return scores
 
 
-def reward_amp_sparseness(population, scores, weight, weight_index):
+def check_amp_sparseness(population, scores, weight, weight_index):
 
     # checks and rewards a more consistent set of amplitudes instead of one central amplitude
     # uses standard deviation to calculate consistency
@@ -761,7 +782,6 @@ def reward_amp_sparseness(population, scores, weight, weight_index):
 
         temp /= gene_length
         temp = math.sqrt(temp)
-
         temp = math.tanh(temp)
         
         if(sound_mode):
@@ -871,7 +891,7 @@ def inverse_squared_amp(population, scores, weight, weight_index):
 
 
 
-def reward_freq_sparseness(population, scores, weight, weight_index):
+def check_freq_sparseness(population, scores, weight, weight_index):
 
     # Punishes partials that are too close to each other
     for i in range(mems_per_pop):
@@ -1674,7 +1694,7 @@ def single_island(param_pop):
     # Use local variable for population parameter
     new_population = param_pop
     # Creating new generations
-    for c in range(loops):
+    for c in range(gen_loops):
         # Calculates fitness scores using helper functions
         fit_scores = fitness_calc(new_population, helper, c)
 

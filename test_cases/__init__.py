@@ -10,11 +10,11 @@ sound_mode = False
 
 def closestMultiple(n, x):
     if x > n:
-        return x;
-    z = (int)(x / 2);
-    n = n + z;
-    n = n - (n % x);
-    return n; 
+        return x
+    z = (int)(x / 2)
+    n = n + z
+    n = n - (n % x)
+    return n
 
 def error_off_partial(population, scores, weight):
 
