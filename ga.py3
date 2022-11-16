@@ -584,7 +584,7 @@ def check_decreasing_attacks(population, scores, weight, weight_index):
         # Current method only checks adjacent harmonics
         for j in range(gene_length - 1):
             if(attack[j] > attack[j + 1]):
-                temp_score = temp_score + 1
+                temp_score += 1
                 
         temp_score /= max_score
         
@@ -660,11 +660,16 @@ def check_stacatos(population, scores, weight, weight_index):
         releases = population[i][5]
 
         for j in (range(gene_length)):
-            R_sum += releases[j]
-
+            if releases[j] < 0.75:
+                R_sum += 1
             if attacks[j] < 0.05:
                 A_sum += 1
         
+        A_sum /= max_score
+        R_sum /= max_score
+        
+        print("Attack sum: ", A_sum, "Release sum: ", R_sum)
+            
         if(sound_mode):
             scores[i] += R_sum * weight
         else:
@@ -761,7 +766,6 @@ def reward_amp_sparseness(population, scores, weight, weight_index):
 
         temp /= gene_length
         temp = math.sqrt(temp)
-
         temp = math.tanh(temp)
         
         if(sound_mode):
@@ -1674,7 +1678,7 @@ def single_island(param_pop):
     # Use local variable for population parameter
     new_population = param_pop
     # Creating new generations
-    for c in range(loops):
+    for c in range(gen_loops):
         # Calculates fitness scores using helper functions
         fit_scores = fitness_calc(new_population, helper, c)
 
