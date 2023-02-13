@@ -1,11 +1,10 @@
-
-
 # Main goal of refactoring is to make GA representation more readiable and writeable to help make it better for setup with DB and website
 
 
 import numpy
 import random
 import sound_generation        #commented out temporarily for testing purposes
+import ga_query_functions
 import os
 import math
 from datetime import datetime
@@ -64,7 +63,7 @@ mutate_scalar = 0.05
 universal_base_freq = 260
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-generate_files = True
+generate_files = False
 
 # Number of islands each generation in representation, with current representation should always be an even number
 num_isles = 20
@@ -86,6 +85,14 @@ class GA:
         self.r = numpy.random.uniform(low=0.0, high=3.0, size=gene_length)
         self.weights = numpy.random.uniform(low=0.0, high=5.0, size=num_funcs)
         self.base_freq = random.uniform(50.0, 170.0)
+
+        # Database relevant parts
+        self.populationID = 0
+        self.chromosomeID = 0
+        self.geneID = 0
+        self.parent1 = 0
+        self.parent2 = 0
+
 
         self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
 
@@ -180,6 +187,11 @@ class GA:
 
         self.weights = w
 
+    def set_base_freq(self, freq):
+
+        # Setter for base frequency
+        self.base_freq = freq
+
 
     def get_harms(self):
 
@@ -225,6 +237,61 @@ class GA:
 
         # Returns harms, amps and ADSR envelope as an array
         return self.genes
+
+    def get_base_freq(self):
+
+        # Getter for base frequency
+        return self.base_freq
+
+    def set_popID(self,popID):
+
+        # Setter method for populationID
+        self.populationID = popID
+
+    def set_chromosomeID(self, chromoID):
+
+        # Setter method for chromosomeID
+        self.chromosomeID = chromoID 
+
+    def set_geneID(self, geneID):
+
+        # Setter method for geneID
+        self.geneID = geneID
+
+    def set_parent1(self, par1):
+
+        # Setter method for parent1
+        self.parent1 = par1
+
+    def set_parent2(self, par2):
+
+        # Setter method for parent2
+        self.parent2 = par2
+
+    def get_popID(self):
+
+        # Getter method for populationID
+        return self.populationID
+
+    def get_chromosomeID(self):
+
+        # Getter method for chromosomeID
+        return self.chromosomeID
+
+    def get_geneID(self):
+
+        # Getter method for geneID
+        return self.geneID
+
+    def get_parent1(self):
+
+        # Getter method for parent1
+        return self.parent1
+
+    def get_parent2(self):
+
+        # Getter method for parent2
+        return self.parent2
 
 
     def reset(self):
@@ -574,118 +641,6 @@ def tournament_selection(population, scores):
 
     return matingpool
 
-
-def crossover(parents):
-
-    # Halfway point in gene for child, first half goes to one parent, second half goes to the other
-    cross_point = num_genes // 2
-
-    count = 0
-
-    # Create empty 3d array to represent new generation
-    new_generation = []
-
-    # Create empty 2d arrays for new members of population
-    offspring1 = GA()
-    #offspring1.init_harms()
-
-    offspring2 = GA()
-    #offspring2.init_harms()
-
-    # For loop that run the same number of times as there are parents
-    # Parents will be i and i + 1 except last iteration in loop, which will use the first and last index
-    for i in range(num_parents):
-
-        if(i == num_parents - 1):
-            # Exception with last element to avoid array out of bounds
-
-            #print("@@@@@@@@@ EXCEPTION TAKEN @@@@@@@@@@@@@@@")
-
-            parent1 = parents[i].get_genes()
-            parent2 = parents[0].get_genes()
-            weight1 = parents[i].get_weights()
-            weight2 = parents[0].get_weights()
-
-            # Takes one half from one parent and one half from the other parent
-            offspring1.set_harms(parent1[0])
-            offspring1.set_amps(parent1[1])
-            offspring1.set_a(parent1[2])
-
-            offspring1.set_d(parent2[3])
-            offspring1.set_s(parent2[4])
-            offspring1.set_r(parent2[5])
-
-            offspring1.set_weights(weight1)
-
-            # Takes one half from one parent and one half from the other parent except flipped for this offspring
-            offspring2.set_harms(parent2[0])
-            offspring2.set_amps(parent2[1])
-            offspring2.set_a(parent2[2])
-
-            offspring2.set_d(parent1[3])
-            offspring2.set_s(parent1[4])
-            offspring2.set_r(parent1[5])
-
-            offspring2.set_weights(weight2)
-
-            # Add offspring to new generation
-            #new_generation[count] = offspring1
-            #new_generation[count + 1] = offspring2
-
-            new_generation.append(offspring1)
-            new_generation.append(offspring2)
-
-
-            return new_generation
-
-
-        parent1 = parents[i].get_genes()
-        parent2 = parents[i + 1].get_genes()
-        weight1 = parents[i].get_weights()
-        weight2 = parents[i + 1].get_weights()
-
-        # Takes one half from one parent and one half from the other parent
-        offspring1.set_harms(parent1[0])
-        offspring1.set_amps(parent1[1])
-        offspring1.set_a(parent1[2])
-
-        offspring1.set_d(parent2[3])
-        offspring1.set_s(parent2[4])
-        offspring1.set_r(parent2[5])
-
-        offspring1.set_weights(weight1)
-
-        # Takes one half from one parent and one half from the other parent except flipped for this offspring
-        offspring2.set_harms(parent2[0])
-        offspring2.set_amps(parent2[1])
-        offspring2.set_a(parent2[2])
-
-        offspring2.set_d(parent1[i])
-        offspring2.set_s(parent1[i])
-        offspring2.set_r(parent1[i])
-
-        offspring2.set_weights(weight2)
-
-        # Add offspring to new generation
-        #new_generation[count] = offspring1
-        #new_generation[count + 1] = offspring2
-
-        new_generation.append(offspring1)
-        new_generation.append(offspring2)
-
-        # Empty out previous data offspring stored
-        #offspring1.reset()
-        #offspring2.reset()
-
-        offspring1 = GA()
-        offspring2 = GA()
-        
-        # Advance index by 2 since two members were added
-        #count = count + 2
-
-    
-
-    return new_generation
 
 
 def mutate_gene(population):
@@ -1654,7 +1609,9 @@ def crossover(parents):
 
             # Retrieve all genes from two parents to perform crossover
             parent1 = parents[0].get_genes()
+            pid1 = parents[0].get_chromosomeID()
             parent2 = parents[i].get_genes()
+            pid2 = parents[i].get_chromosomeID()
 
             # Takes one half from parent1 and other half from parent2
             #offspring1[0:cross_point] = parent1[0:cross_point]
@@ -1677,6 +1634,13 @@ def crossover(parents):
             mem1.set_weights(parents[0].get_weights())
             mem2.set_weights(parents[i].get_weights())
 
+            # Also need to store the parents by storing their chromosomeIDs
+            mem1.set_parent1(pid1)
+            mem1.set_parent2(pid2)
+
+            mem2.set_parent1(pid1)
+            mem2.set_parent2(pid2)
+
             # Add offspring to new generation
             new_generation[count] = mem1
             new_generation[count + 1] = mem2
@@ -1685,7 +1649,9 @@ def crossover(parents):
 
         # Retrieve all genes from two parents to perfrom crossover
         parent1 = parents[i].get_genes()
+        pid1 = parents[i].get_chromosomeID()
         parent2 = parents[i + 1].get_genes()
+        pid2 = parents[i + 1].get_chromosomeID()
 
         # Takes one half from parent1 and other half from parent2
         offspring1[:cross_point] = parent1[:cross_point]
@@ -1707,6 +1673,13 @@ def crossover(parents):
         # Also need to add member specific weights since that is not included in genes array
         mem1.set_weights(parents[i].get_weights())
         mem2.set_weights(parents[i + 1].get_weights())
+
+        # Also need to store the parents by storing their chromosomeIDs
+        mem1.set_parent1(pid1)
+        mem1.set_parent2(pid2)
+
+        mem2.set_parent1(pid1)
+        mem2.set_parent2(pid2)
 
 
         # Add addspring to new generation
@@ -1738,7 +1711,9 @@ def uniform_crossover(parents):
 
             # Picks the first and last parents in parent array
             parent1 = parents[0].get_genes()
+            pid1 = parents[0].get_chromosomeID()
             parent2 = parents[num_parents - 1].get_genes()
+            pid2 = parents[num_parents - 1].get_chromosomeID()
 
             for i in range(num_genes):
 
@@ -1773,6 +1748,13 @@ def uniform_crossover(parents):
             mem1.set_genes(child1)
             mem2.set_genes(child2)
 
+            # Also need to store each member's parents
+            mem1.set_parent1(pid1)
+            mem1.set_parent2(pid2)
+
+            mem2.set_parent1(pid1)
+            mem2.set_parent2(pid2)
+
             # Also need to do a coin flip to decide which parent's weights will be passed down
             coin = random.randint(0,1)
 
@@ -1805,7 +1787,9 @@ def uniform_crossover(parents):
 
         # Pick the parents from the parent array
         parent1 = parents[c].get_genes()
+        pid1 = parents[c].get_chromosomeID()
         parent2 = parents[c + 1].get_genes()
+        pid2 = parents[c + 1].get_chromosomeID()
 
         for i in range(num_genes):
 
@@ -1839,6 +1823,13 @@ def uniform_crossover(parents):
 
         mem1.set_genes(child1)
         mem2.set_genes(child2)
+
+        # Also need to store each member's parents
+        mem1.set_parent1(pid1)
+        mem1.set_parent2(pid2)
+
+        mem2.set_parent1(pid1)
+        mem2.set_parent2(pid2) 
 
         # Also need to do a coin flip to decide which parent's weights will be passed down
         coin = random.randint(0,1)
@@ -1910,7 +1901,9 @@ def deep_uniform_crossover(parents):
         if(c == num_parents - 1):
             # Special case that helps avoid array out of bounds error
             parent1 = parents[0].get_genes()
+            pid1 = parents[0].get_chromosomeID()
             parent2 = parents[num_parents - 1].get_genes()
+            pid2 = parents[num_parents - 1].get_chromosomeID()
 
             p_weights1 = parents[0].get_weights()
             p_weights2 = parents[num_parents - 1].get_weights()
@@ -1977,6 +1970,13 @@ def deep_uniform_crossover(parents):
             mem2.set_genes(child2)
             mem2.set_weights(weight2)
 
+            # Also need to store each member's parents
+            mem1.set_parent1(pid1)
+            mem1.set_parent2(pid2)
+
+            mem2.set_parent1(pid1)
+            mem2.set_parent2(pid2)
+
             # Add new mems to new population
             new_generation[count] = mem1
             new_generation[count + 1] = mem2
@@ -1990,7 +1990,9 @@ def deep_uniform_crossover(parents):
         # Everything below is similar to the special case above, the main
         # difference is that the indexing of the parents is slightly different
         parent1 = parents[c].get_genes()
+        pid1 = parents[c].get_chromosomeID()
         parent2 = parents[c + 1].get_genes()
+        pid2 = parents[c + 1].get_chromosomeID()
 
         p_weights1 = parents[c].get_weights()
         p_weights2 = parents[c + 1].get_weights()
@@ -2056,6 +2058,13 @@ def deep_uniform_crossover(parents):
 
         mem2.set_genes(child2)
         mem2.set_weights(weight2)
+
+        # Also need to store each member's parents
+        mem1.set_parent1(pid1)
+        mem1.set_parent2(pid2)
+
+        mem2.set_parent1(pid1)
+        mem2.set_parent2(pid2)
 
         # Add new mems to new population
         new_generation[count] = mem1
@@ -2481,6 +2490,12 @@ def single_wav(member):
 
 new_population = intial_gen()
 
+# for i in new_population:
+#     pid1 = i.get_parent1()
+#     pid2 = i.get_parent2()
+#     print(pid1)
+#     print(pid2)
+
 #print(new_population)
 
 #print(new_population)
@@ -2514,8 +2529,7 @@ parents = tournament_selection(new_population, fit_scores)
 
 #print_generation(parents)
 
-# @@@@@@@@@@@ LAST MEMBER GETS ZEROD OUT WHEN DOING CROSSOVER @@@@@@@@@@@@@
-new_population = crossover(parents)
+new_population = deep_uniform_crossover(parents)
 
 #print("---------------------------------------------------------------------------")
 #print_generation(new_population)
@@ -2530,8 +2544,23 @@ new_population = mutate_gene(new_population)
 
 #print_generation(new_population)
 
-single_wav(new_population[0])
+#single_wav(new_population[0])
+
 
 single_island(new_population)
 
-single_wav(new_population[0])
+
+for i in new_population:
+    ga_query_functions.add_member(i, 2)
+
+
+
+#single_wav(new_population[0])
+
+# for i in new_population:
+#     pid1 = i.get_parent1()
+#     pid2 = i.get_parent2()
+#     print(pid1)
+#     print(pid2)
+
+

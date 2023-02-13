@@ -1,10 +1,15 @@
 import pymysql
+
+# Examples for pymysql
 # https://pymysql.readthedocs.io/en/latest/user/examples.html
+
+# Potential examples for optimizing inserts, specifically the "Row construction to insert multiple records" section seems useful
+# https://www.digitalocean.com/community/tutorials/sql-insert-multiple-rows
 
 
 import numpy
 import random
-#import sound_generation        #commented out temporarily for testing purposes
+import sound_generation        #commented out temporarily for testing purposes
 import os
 import math
 from datetime import datetime
@@ -288,7 +293,7 @@ class GA:
         # Getter method for parent1
         return self.parent1
 
-    def get_paretn2(self):
+    def get_parent2(self):
 
         # Getter method for parent2
         return self.parent2
@@ -356,7 +361,7 @@ cursor = db.cursor()
 
 
 # for both retrieve and add member, need to handle weights as well
-# might need to modify weights table to include the weight and the helper function it's associated with
+# may need to add indices to all the genes in case queries to not retrieve the data in the same order every time
 # need to modify GA to store database related info
 
 
@@ -380,7 +385,7 @@ def retrieve_member(chromosomeID):
     harms = []
 
     # To make this more modular, the 10 could be changed to gene_length when integrated into the GA file
-    for i in range(10):
+    for i in range(gene_length):
         result = cursor.fetchone()
         result = float(result[0])
         harms.append(result)
@@ -393,7 +398,7 @@ def retrieve_member(chromosomeID):
 
     amps = []
 
-    for i in range(10):
+    for i in range(gene_length):
         result = cursor.fetchone()
         result = float(result[0])
         amps.append(result)
@@ -406,7 +411,7 @@ def retrieve_member(chromosomeID):
 
     a = []
 
-    for i in range(10):
+    for i in range(gene_length):
         result = cursor.fetchone()
         result = float(result[0])
         a.append(result)
@@ -419,7 +424,7 @@ def retrieve_member(chromosomeID):
 
     d = []
 
-    for i in range(10):
+    for i in range(gene_length):
         result = cursor.fetchone()
         result = float(result[0])
         d.append(result)
@@ -432,7 +437,7 @@ def retrieve_member(chromosomeID):
 
     s = []
 
-    for i in range(10):
+    for i in range(gene_length):
         result = cursor.fetchone()
         result = float(result[0])
         s.append(result)
@@ -445,12 +450,27 @@ def retrieve_member(chromosomeID):
 
     r = []
 
-    for i in range(10):
+    for i in range(gene_length):
         result = cursor.fetchone()
         result = float(result[0])
         r.append(result)
 
     # print(r)
+
+
+    # Also should retrieve weights of helper functions
+
+    sql = "SELECT `value` FROM `weights`WHERE `chromosomeID`=%s  ORDER BY `helper_func` ASC"
+    cursor.execute(sql, (chromosomeID))
+
+    w = []
+
+    # @@@@@@@@ will later need to set this to num_funcs @@@@@@@@
+    for i in range(num_funcs):
+        result = cursor.fetchone()
+        result = float(result[0])
+        w.append(result)
+
 
     
     # Also should return populationID, chromosomeID, geneID, parent1 and parent2
@@ -477,6 +497,8 @@ def retrieve_member(chromosomeID):
 
     member_genes = [harms,amps,a,d,s,r]
 
+    member.set_weights(w)
+
     member.set_genes(member_genes)
     member.set_popID(populationID)
     member.set_chromosomeID(chromosomeID)
@@ -498,7 +520,7 @@ def add_member(member, populationID):
 
     p1 = member.get_parent1()
     p1 = str(p1)
-    p2 = member.get_paretn2()
+    p2 = member.get_parent2()
     p2 = str(p2)
 
     popID = str(populationID)
@@ -528,64 +550,70 @@ def add_member(member, populationID):
     geneID = str(result[0])
 
 
-    # Insert information about parents into new member
-    # sql = "INSERT INTO `chromosomes` (`parent1`, `parent2`) VALUES (%s, %s)"
-    # cursor.execute(sql, (p1, p2))
-
-
-
     harms = member.get_harms()
-    for i in range(10):
+    for i in range(gene_length):
         # Insert the harmonics of the member
         harm = str(harms[i])
         sql = "INSERT INTO `harmonics` (`value`, `geneID`) VALUES (%s, %s)"
         cursor.execute(sql, (harm, geneID))
 
     amps = member.get_amps()
-    for i in range(10):
+    for i in range(gene_length):
         # Insert the amplitudes of the member
         amp = str(amps[i])
         sql = "INSERT INTO `amplitudes` (`value`, `geneID`) VALUES (%s, %s)"
         cursor.execute(sql, (amp, geneID))
 
     attack = member.get_a()
-    for i in range(10):
+    for i in range(gene_length):
         # Insert the attacks of the member
         a = str(attack[i])
         sql = "INSERT INTO `attacks` (`value`, `geneID`) VALUES (%s, %s)"
         cursor.execute(sql, (a, geneID))
 
     decay = member.get_d()
-    for i in range(10):
+    for i in range(gene_length):
         # Insert the decays of the member
         d = str(decay[i])
         sql = "INSERT INTO `decays` (`value`, `geneID`) VALUES (%s, %s)"
         cursor.execute(sql, (d, geneID))
 
     sustain = member.get_s()
-    for i in range(10):
+    for i in range(gene_length):
         # Insert the sustains of the member
         s = str(sustain[i])
         sql = "INSERT INTO `sustains` (`value`, `geneID`) VALUES (%s, %s)"
         cursor.execute(sql, (s, geneID))
 
     release = member.get_r()
-    for i in range(10):
+    for i in range(gene_length):
         # Insert the releases of the member
         r = str(release[i])
         sql = "INSERT INTO `releases` (`value`, `geneID`) VALUES (%s, %s)"
         cursor.execute(sql, (r, geneID))
 
+    weight = member.get_weights()
+    # @@@@@@@@ will later need to set this to num_funcs @@@@@@@@
+    for i in range(num_funcs):
+        # Insert the weights of the helper functions of each members
+        w = str(weight[i])
+        dex = str(i + 1)
+        sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s)"
+        cursor.execute(sql, (w, chromosomeID, dex))
+
 
     # The database won't actually receive anything without this commit
-    db.commit()
+    # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
+    #db.commit()
 
+
+# Will eventually need an update member function that can be used when a mutation occurs
 
 
 # TESTER CODE
 
 
-# chromoID = 8
+# chromoID = 2
 # new_mem = retrieve_member(chromoID)
 
 # popID = new_mem.get_popID()
@@ -595,6 +623,9 @@ def add_member(member, populationID):
 # print(popID)
 # print(gi)
 # print(har)
+
+# weight = new_mem.get_weights()
+# print(weight)
 
 
 
@@ -616,10 +647,13 @@ freq = 247
 for i in range(gene_length):
     harms[i] = (i+1) * freq
 
+weights = [3.2]
+
 # FOR REFACTOR VERSION will need to use setters to make this happen
 ideal_set1 = GA()
 temp_set1 = [harms, amps, a, d, s, r]
 ideal_set1.set_genes(temp_set1)
+ideal_set1.set_weights(weights)
 ideal_set1.set_base_freq(freq)
 ideal_set1.set_parent1(3)
 ideal_set1.set_parent2(2)
@@ -628,6 +662,11 @@ ideal_set1.set_popID(2)
 pop = ideal_set1.get_popID()
 
 #add_member(ideal_set1, pop)
+
+
+
+
+
 
 # sql = "SELECT * FROM `populations`"
 # cursor.execute(sql)
