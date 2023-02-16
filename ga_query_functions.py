@@ -97,6 +97,7 @@ class GA:
         self.geneID = 0
         self.parent1 = 0
         self.parent2 = 0
+        self.gen_num = 0
 
 
         self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
@@ -273,6 +274,11 @@ class GA:
         # Setter method for parent2
         self.parent2 = par2
 
+    def set_gen_number(self, g_num):
+
+        # Setter for gen_num
+        self.gen_number = g_num
+
     def get_popID(self):
 
         # Getter method for populationID
@@ -297,6 +303,11 @@ class GA:
 
         # Getter method for parent2
         return self.parent2
+
+    def get_gen_number(self):
+
+        # Getter method for gen_number
+        return self.gen_number
 
 
     def reset(self):
@@ -376,6 +387,18 @@ def retrieve_member(chromosomeID):
     cursor.execute(sql, (chromosomeID))
     result = cursor.fetchone()
     geneID = str(result[0])
+
+    # Get the populationID with corresponding chromosomeID
+    sql = "SELECT `populationID` FROM `chromosomes` WHERE `chromosomeID` = %s"
+    cursor.execute(sql, (chromosomeID))
+    result = cursor.fetchone()
+    populationID = str(result[0])
+
+    # Get the generation number
+    sql = "SELECT `generation_number` FROM `populations` WHERE `populationID` = %s"
+    cursor.execute(sql, (populationID))
+    result = cursor.fetchone()
+    gen_num = str(result[0])
 
 
     # The input in sql query needs to be a string, not an int
@@ -475,11 +498,6 @@ def retrieve_member(chromosomeID):
     
     # Also should return populationID, chromosomeID, geneID, parent1 and parent2
 
-    # Retrieves populationID from corresponding chromosome
-    sql = "SELECT `populationID` FROM `chromosomes` WHERE `chromosomeID` = %s" 
-    cursor.execute(sql, (chromosomeID))
-    result = cursor.fetchone()
-    populationID = str(result[0])
 
     # Retrieves first parent from corresponding chromosome
     sql = "SELECT `parent1` FROM `chromosomes` WHERE `chromosomeID` = %s" 
@@ -505,17 +523,38 @@ def retrieve_member(chromosomeID):
     member.set_geneID(geneID)
     member.set_parent1(parent1)
     member.set_parent2(parent2)
+    member.set_gen_number(gen_num)
+
 
 
     return member
 
 
+def add_population(gen_number):
+
+    # Create a new island with the generation number given
+    sql = "INSERT INTO `populations` (`generation_number`) VALUES (%s)"
+    cursor.execute(sql, (gen_number))
+
+    # For now, have it return the population id of this newly created population
+    sql = "SELECT `populationID` FROM `populations` WHERE `populationID`=(SELECT max(`populationID`) FROM `populations`)"
+    cursor.execute(sql)
+    result = cursor.fetchone()
+    populationID = str(result[0])
+
+
+    # The database won't actually receive anything without this commit
+    # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
+    # db.commit()
+
+    return populationID
+
+
+
+# In the future, will probably want it so that a new population is created as well
+# and instead of populationID being the param, the generation number is the param
 
 def add_member(member, populationID):
-
-
-    # will have members array be full of GA classes, not just lists
-    # for now just put variable names where GA.getters would be
 
 
     p1 = member.get_parent1()
@@ -627,6 +666,9 @@ def add_member(member, populationID):
 # weight = new_mem.get_weights()
 # print(weight)
 
+# num = new_mem.get_gen_number()
+# print(num)
+
 
 
 harms = [0] * gene_length
@@ -664,7 +706,8 @@ pop = ideal_set1.get_popID()
 #add_member(ideal_set1, pop)
 
 
-
+# popID = add_population(5)
+# print(popID)
 
 
 

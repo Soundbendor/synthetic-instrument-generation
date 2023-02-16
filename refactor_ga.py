@@ -92,6 +92,7 @@ class GA:
         self.geneID = 0
         self.parent1 = 0
         self.parent2 = 0
+        self.gen_num = 0
 
 
         self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
@@ -268,6 +269,11 @@ class GA:
         # Setter method for parent2
         self.parent2 = par2
 
+    def set_gen_number(self, g_num):
+
+        # Setter for gen_num
+        self.gen_number = g_num
+
     def get_popID(self):
 
         # Getter method for populationID
@@ -292,6 +298,11 @@ class GA:
 
         # Getter method for parent2
         return self.parent2
+
+    def get_gen_number(self):
+
+        # Getter method for gen_number
+        return self.gen_number
 
 
     def reset(self):
