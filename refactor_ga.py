@@ -92,7 +92,7 @@ class GA:
         self.geneID = 0
         self.parent1 = 0
         self.parent2 = 0
-        self.gen_num = 0
+        self.gen_number = 0
 
 
         self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
@@ -1623,6 +1623,7 @@ def crossover(parents):
             pid1 = parents[0].get_chromosomeID()
             parent2 = parents[i].get_genes()
             pid2 = parents[i].get_chromosomeID()
+            par_gen_num = parents[0].get_gen_number()
 
             # Takes one half from parent1 and other half from parent2
             #offspring1[0:cross_point] = parent1[0:cross_point]
@@ -1652,6 +1653,10 @@ def crossover(parents):
             mem2.set_parent1(pid1)
             mem2.set_parent2(pid2)
 
+            # Also need to set generation number
+            mem1.set_gen_number(par_gen_num + 1)
+            mem2.set_gen_number(par_gen_num + 1)
+
             # Add offspring to new generation
             new_generation[count] = mem1
             new_generation[count + 1] = mem2
@@ -1663,6 +1668,7 @@ def crossover(parents):
         pid1 = parents[i].get_chromosomeID()
         parent2 = parents[i + 1].get_genes()
         pid2 = parents[i + 1].get_chromosomeID()
+        par_gen_num = parents[i].get_gen_number()
 
         # Takes one half from parent1 and other half from parent2
         offspring1[:cross_point] = parent1[:cross_point]
@@ -1691,6 +1697,10 @@ def crossover(parents):
 
         mem2.set_parent1(pid1)
         mem2.set_parent2(pid2)
+
+        # Also need to set generation number
+        mem1.set_gen_number(par_gen_num + 1)
+        mem2.set_gen_number(par_gen_num + 1)
 
 
         # Add addspring to new generation
@@ -1725,6 +1735,7 @@ def uniform_crossover(parents):
             pid1 = parents[0].get_chromosomeID()
             parent2 = parents[num_parents - 1].get_genes()
             pid2 = parents[num_parents - 1].get_chromosomeID()
+            par_gen_num = parents[0].get_gen_number()
 
             for i in range(num_genes):
 
@@ -1766,6 +1777,10 @@ def uniform_crossover(parents):
             mem2.set_parent1(pid1)
             mem2.set_parent2(pid2)
 
+            # Also need to set generation number
+            mem1.set_gen_number(par_gen_num + 1)
+            mem2.set_gen_number(par_gen_num + 1)
+
             # Also need to do a coin flip to decide which parent's weights will be passed down
             coin = random.randint(0,1)
 
@@ -1801,6 +1816,7 @@ def uniform_crossover(parents):
         pid1 = parents[c].get_chromosomeID()
         parent2 = parents[c + 1].get_genes()
         pid2 = parents[c + 1].get_chromosomeID()
+        par_gen_num = parents[c].get_gen_number()
 
         for i in range(num_genes):
 
@@ -1841,6 +1857,10 @@ def uniform_crossover(parents):
 
         mem2.set_parent1(pid1)
         mem2.set_parent2(pid2) 
+
+        # Also need to set generation number
+        mem1.set_gen_number(par_gen_num + 1)
+        mem2.set_gen_number(par_gen_num + 1)
 
         # Also need to do a coin flip to decide which parent's weights will be passed down
         coin = random.randint(0,1)
@@ -1915,6 +1935,7 @@ def deep_uniform_crossover(parents):
             pid1 = parents[0].get_chromosomeID()
             parent2 = parents[num_parents - 1].get_genes()
             pid2 = parents[num_parents - 1].get_chromosomeID()
+            par_gen_num = parents[0].get_gen_number()
 
             p_weights1 = parents[0].get_weights()
             p_weights2 = parents[num_parents - 1].get_weights()
@@ -1988,6 +2009,10 @@ def deep_uniform_crossover(parents):
             mem2.set_parent1(pid1)
             mem2.set_parent2(pid2)
 
+            # Also need to set generation number
+            mem1.set_gen_number(par_gen_num + 1)
+            mem2.set_gen_number(par_gen_num + 1)
+
             # Add new mems to new population
             new_generation[count] = mem1
             new_generation[count + 1] = mem2
@@ -2004,6 +2029,7 @@ def deep_uniform_crossover(parents):
         pid1 = parents[c].get_chromosomeID()
         parent2 = parents[c + 1].get_genes()
         pid2 = parents[c + 1].get_chromosomeID()
+        par_gen_num = parents[c].get_gen_number()
 
         p_weights1 = parents[c].get_weights()
         p_weights2 = parents[c + 1].get_weights()
@@ -2076,6 +2102,10 @@ def deep_uniform_crossover(parents):
 
         mem2.set_parent1(pid1)
         mem2.set_parent2(pid2)
+
+        # Also need to set generation number
+        mem1.set_gen_number(par_gen_num + 1)
+        mem2.set_gen_number(par_gen_num + 1)
 
         # Add new mems to new population
         new_generation[count] = mem1
@@ -2561,8 +2591,8 @@ new_population = mutate_gene(new_population)
 single_island(new_population)
 
 
-for i in new_population:
-    ga_query_functions.add_member(i, 2)
+# for i in new_population:
+#    ga_query_functions.add_member(i, 2)
 
 
 
@@ -2573,5 +2603,3 @@ for i in new_population:
 #     pid2 = i.get_parent2()
 #     print(pid1)
 #     print(pid2)
-
-

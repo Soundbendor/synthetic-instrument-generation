@@ -97,7 +97,7 @@ class GA:
         self.geneID = 0
         self.parent1 = 0
         self.parent2 = 0
-        self.gen_num = 0
+        self.gen_number = 0
 
 
         self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
@@ -590,55 +590,50 @@ def add_member(member, populationID):
 
 
     harms = member.get_harms()
-    for i in range(gene_length):
-        # Insert the harmonics of the member
-        harm = str(harms[i])
-        sql = "INSERT INTO `harmonics` (`value`, `geneID`) VALUES (%s, %s)"
-        cursor.execute(sql, (harm, geneID))
+    # Insert the harmonics of the member
+    # harm = str(harms[i])
+    sql = "INSERT INTO `harmonics` (`value`, `geneID`) VALUES (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s)"
+    # cursor.execute(sql, (str(harms[0]), geneID), (str(harms[1]), geneID), (str(harms[2]), geneID), (str(harms[3]), geneID), (str(harms[4]), geneID), (str(harms[5]), geneID), (str(harms[6]), geneID), (str(harms[7]), geneID), (str(harms[8]), geneID), (str(harms[9]), geneID))
+    cursor.execute(sql, (str(harms[0]), geneID, str(harms[1]), geneID, str(harms[2]), geneID, str(harms[3]), geneID, str(harms[4]), geneID, str(harms[5]), geneID, str(harms[6]), geneID, str(harms[7]), geneID, str(harms[8]), geneID, str(harms[9]), geneID))
+
 
     amps = member.get_amps()
-    for i in range(gene_length):
-        # Insert the amplitudes of the member
-        amp = str(amps[i])
-        sql = "INSERT INTO `amplitudes` (`value`, `geneID`) VALUES (%s, %s)"
-        cursor.execute(sql, (amp, geneID))
+    # Insert the amplitudes of the member
+    # amp = str(amps[i])
+    sql = "INSERT INTO `amplitudes` (`value`, `geneID`) VALUES (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s)"
+    cursor.execute(sql, (str(amps[0]), geneID, str(amps[1]), geneID, str(amps[2]), geneID, str(amps[3]), geneID, str(amps[4]), geneID, str(amps[5]), geneID, str(amps[6]), geneID, str(amps[7]), geneID, str(amps[8]), geneID, str(amps[9]), geneID))
 
-    attack = member.get_a()
-    for i in range(gene_length):
-        # Insert the attacks of the member
-        a = str(attack[i])
-        sql = "INSERT INTO `attacks` (`value`, `geneID`) VALUES (%s, %s)"
-        cursor.execute(sql, (a, geneID))
 
-    decay = member.get_d()
-    for i in range(gene_length):
-        # Insert the decays of the member
-        d = str(decay[i])
-        sql = "INSERT INTO `decays` (`value`, `geneID`) VALUES (%s, %s)"
-        cursor.execute(sql, (d, geneID))
+    a = member.get_a()
+    # Insert the attacks of the member
+    # a = str(attack[i])
+    sql = "INSERT INTO `attacks` (`value`, `geneID`) VALUES (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s)"
+    cursor.execute(sql, (str(a[0]), geneID, str(a[1]), geneID, str(a[2]), geneID, str(a[3]), geneID, str(a[4]), geneID, str(a[5]), geneID, str(a[6]), geneID, str(a[7]), geneID, str(a[8]), geneID, str(a[9]), geneID))
 
-    sustain = member.get_s()
-    for i in range(gene_length):
-        # Insert the sustains of the member
-        s = str(sustain[i])
-        sql = "INSERT INTO `sustains` (`value`, `geneID`) VALUES (%s, %s)"
-        cursor.execute(sql, (s, geneID))
+    d = member.get_d()
+    # Insert the decays of the member
+    # d = str(decay[i])
+    sql = "INSERT INTO `decays` (`value`, `geneID`) VALUES (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s)"
+    cursor.execute(sql, (str(d[0]), geneID, str(d[1]), geneID, str(d[2]), geneID, str(d[3]), geneID, str(d[4]), geneID, str(d[5]), geneID, str(d[6]), geneID, str(d[7]), geneID, str(d[8]), geneID, str(d[9]), geneID))
 
-    release = member.get_r()
-    for i in range(gene_length):
-        # Insert the releases of the member
-        r = str(release[i])
-        sql = "INSERT INTO `releases` (`value`, `geneID`) VALUES (%s, %s)"
-        cursor.execute(sql, (r, geneID))
+    s = member.get_s()
+    # Insert the sustains of the member
+    # s = str(sustain[i])
+    sql = "INSERT INTO `sustains` (`value`, `geneID`) VALUES (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s)"
+    cursor.execute(sql, (str(s[0]), geneID, str(s[1]), geneID, str(s[2]), geneID, str(s[3]), geneID, str(s[4]), geneID, str(s[5]), geneID, str(s[6]), geneID, str(s[7]), geneID, str(s[8]), geneID, str(s[9]), geneID))
 
-    weight = member.get_weights()
-    # @@@@@@@@ will later need to set this to num_funcs @@@@@@@@
-    for i in range(num_funcs):
-        # Insert the weights of the helper functions of each members
-        w = str(weight[i])
-        dex = str(i + 1)
-        sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s)"
-        cursor.execute(sql, (w, chromosomeID, dex))
+    r = member.get_r()
+    # Insert the releases of the member
+    # r = str(release[i])
+    sql = "INSERT INTO `releases` (`value`, `geneID`) VALUES (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s)"
+    cursor.execute(sql, (str(r[0]), geneID, str(r[1]), geneID, str(r[2]), geneID, str(r[3]), geneID, str(r[4]), geneID, str(r[5]), geneID, str(r[6]), geneID, str(r[7]), geneID, str(r[8]), geneID, str(r[9]), geneID))
+
+    w = member.get_weights()
+    # Insert the weights of the helper functions of each members
+    # w = str(weight[i])
+    # dex = str(i + 1)
+    sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)"
+    cursor.execute(sql, (str(w[0]), chromosomeID, '1', str(w[1]), chromosomeID, '2', str(w[2]), chromosomeID, '3', str(w[3]), chromosomeID, '4', str(w[4]), chromosomeID, '5', str(w[5]), chromosomeID, '6', str(w[6]), chromosomeID, '7', str(w[7]), chromosomeID, '8', str(w[8]), chromosomeID, '9', str(w[9]), chromosomeID, '10'))
 
 
     # The database won't actually receive anything without this commit
@@ -689,7 +684,7 @@ freq = 247
 for i in range(gene_length):
     harms[i] = (i+1) * freq
 
-weights = [3.2]
+weights = [3.2] * num_funcs
 
 # FOR REFACTOR VERSION will need to use setters to make this happen
 ideal_set1 = GA()
@@ -703,7 +698,7 @@ ideal_set1.set_popID(2)
 
 pop = ideal_set1.get_popID()
 
-#add_member(ideal_set1, pop)
+# add_member(ideal_set1, pop)
 
 
 # popID = add_population(5)
