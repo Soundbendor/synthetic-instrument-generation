@@ -9,7 +9,7 @@ import pymysql
 
 import numpy
 import random
-import sound_generation        #commented out temporarily for testing purposes
+# import sound_generation        #commented out temporarily for testing purposes
 import os
 import math
 from datetime import datetime
@@ -398,7 +398,7 @@ def retrieve_member(chromosomeID):
     sql = "SELECT `generation_number` FROM `populations` WHERE `populationID` = %s"
     cursor.execute(sql, (populationID))
     result = cursor.fetchone()
-    gen_num = str(result[0])
+    gen_num = int(result[0])
 
 
     # The input in sql query needs to be a string, not an int
@@ -632,11 +632,9 @@ def add_member(member, populationID):
     # Insert the weights of the helper functions of each members
     # w = str(weight[i])
     # dex = str(i + 1)
-    sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)"
-    cursor.execute(sql, (str(w[0]), chromosomeID, '1', str(w[1]), chromosomeID, '2', str(w[2]), chromosomeID, '3', str(w[3]), chromosomeID, '4', str(w[4]), chromosomeID, '5', str(w[5]), chromosomeID, '6', str(w[6]), chromosomeID, '7', str(w[7]), chromosomeID, '8', str(w[8]), chromosomeID, '9', str(w[9]), chromosomeID, '10'))
-
-
-    # The database won't actually receive anything without this commit
+    sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)"
+    cursor.execute(sql, (str(w[0]), chromosomeID, '1', str(w[1]), chromosomeID, '2', str(w[2]), chromosomeID, '3', str(w[3]), chromosomeID, '4', str(w[4]), chromosomeID, '5', str(w[5]), chromosomeID, '6', str(w[6]), chromosomeID, '7', str(w[7]), chromosomeID, '8', str(w[8]), chromosomeID, '9', str(w[9]), chromosomeID, '10', str(w[10]), chromosomeID, '11', str(w[11]), chromosomeID, '12', str(w[12]), chromosomeID, '13', str(w[13]), chromosomeID, '14', str(w[14]), chromosomeID, '15', str(w[15]), chromosomeID, '16', str(w[16]), chromosomeID, '17', str(w[17]), chromosomeID, '18', str(w[18]), chromosomeID, '19', str(w[19]), chromosomeID, '20', str(w[20]), chromosomeID, '21', str(w[21]), chromosomeID, '22', str(w[22]), chromosomeID, '23', str(w[23]), chromosomeID, '24'))
+    # The database won't actually receive anything without this commi
     # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
     #db.commit()
 
@@ -698,7 +696,7 @@ ideal_set1.set_popID(2)
 
 pop = ideal_set1.get_popID()
 
-# add_member(ideal_set1, pop)
+#add_member(ideal_set1, pop)
 
 
 # popID = add_population(5)
@@ -713,6 +711,14 @@ pop = ideal_set1.get_popID()
 # while result:
 #     print(result)
 #     result = cursor.fetchone()
+
+
+# new_mem = retrieve_member(53)
+
+# ws = new_mem.get_weights()
+# print(ws)
+
+# add_member(new_mem, 2)
 
 
 
