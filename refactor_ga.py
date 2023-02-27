@@ -3,7 +3,8 @@
 
 import numpy
 import random
-import sound_generation        #commented out temporarily for testing purposes
+# import sound_generation        #commented out temporarily for testing purposes
+# import ga_query_functions as query
 import ga_query_functions
 import os
 import math
@@ -92,7 +93,7 @@ class GA:
         self.geneID = 0
         self.parent1 = 0
         self.parent2 = 0
-        self.gen_number = 0
+        self.gennum = 0
 
 
         self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
@@ -269,10 +270,10 @@ class GA:
         # Setter method for parent2
         self.parent2 = par2
 
-    def set_gen_number(self, g_num):
+    def set_gen_number(self, num):
 
         # Setter for gen_num
-        self.gen_number = g_num
+        self.gennum = num
 
     def get_popID(self):
 
@@ -302,7 +303,7 @@ class GA:
     def get_gen_number(self):
 
         # Getter method for gen_number
-        return self.gen_number
+        return self.gennum
 
 
     def reset(self):
@@ -652,62 +653,6 @@ def tournament_selection(population, scores):
 
     return matingpool
 
-
-
-def mutate_gene(population):
-
-    # Random number generator from 0-7, will decide which chromosome is picked
-    # Random number generator from 0-5, will decide which gene is picked
-    p = random.randint(0,mems_per_pop - 1)
-    c = random.randint(0,num_genes - 1)
-
-    # Coin flip to determine if scalar increases or decreases values
-    a = random.randint(0,1)
-
-    #print("Chromosome {0} picked".format(p))
-    #print("Gene {0} picked".format(c))
-    #print("Coin flip is {0}".format(a))
-
-    # Determines how aggresive mutation is
-    if(a == 0):
-        scalar = 1 - mutate_scalar
-    else:
-        scalar = 1 + mutate_scalar
-
-    if(c == 0):
-        #print("Mutated h!")
-        for i in range(gene_length):
-            # Additional handling required for instrument/ratio mode to ignore base frequency
-            if(sound_mode == False and i == 0):
-                return population
-            population[p].harms[i] = population[p].harms[i] * scalar
-
-    elif(c == 1):
-        #print("Mutated m!")
-        for i in range(gene_length):
-            population[p].amps[i] = population[p].amps[i] * scalar
-
-    elif(c == 2):
-        #print("Mutated a!")
-        for i in range(gene_length):
-            population[p].a[i] = population[p].a[i] * scalar
-
-    elif(c == 3):
-        #print("Mutated d!")
-        for i in range(gene_length):
-            population[p].d[i] = population[p].d[i] * scalar
-
-    elif(c == 4):
-        #print("Mutated s!")
-        for i in range(gene_length):
-            population[p].s[i] = population[p].s[i] * scalar
-
-    elif(c == 5):
-        #print("Mutated r!")
-        for i in range(gene_length):
-            population[p].r[i] = population[p].r[i] * scalar
-
-    return population
 
 
 def print_generation(gen):
@@ -1654,8 +1599,11 @@ def crossover(parents):
             mem2.set_parent2(pid2)
 
             # Also need to set generation number
-            mem1.set_gen_number(par_gen_num + 1)
-            mem2.set_gen_number(par_gen_num + 1)
+            #mem1.set_gen_number(par_gen_num + 1)
+            #mem2.set_gen_number(par_gen_num + 1)
+            new_gen_num = par_gen_num + 1
+            mem1.set_gen_number(new_gen_num)
+            mem2.set_gen_number(new_gen_num)
 
             # Add offspring to new generation
             new_generation[count] = mem1
@@ -1699,8 +1647,10 @@ def crossover(parents):
         mem2.set_parent2(pid2)
 
         # Also need to set generation number
-        mem1.set_gen_number(par_gen_num + 1)
-        mem2.set_gen_number(par_gen_num + 1)
+        new_gen_num = par_gen_num + 1
+        #print(new_gen_num)
+        mem1.set_gen_number(new_gen_num)
+        mem2.set_gen_number(new_gen_num)
 
 
         # Add addspring to new generation
@@ -2010,8 +1960,12 @@ def deep_uniform_crossover(parents):
             mem2.set_parent2(pid2)
 
             # Also need to set generation number
-            mem1.set_gen_number(par_gen_num + 1)
-            mem2.set_gen_number(par_gen_num + 1)
+            #mem1.set_gen_number(par_gen_num + 1)
+            #mem2.set_gen_number(par_gen_num + 1)
+            new_gen_num = par_gen_num + 1
+            #print(new_gen_num)
+            mem1.set_gen_number(new_gen_num)
+            mem2.set_gen_number(new_gen_num)
 
             # Add new mems to new population
             new_generation[count] = mem1
@@ -2104,8 +2058,12 @@ def deep_uniform_crossover(parents):
         mem2.set_parent2(pid2)
 
         # Also need to set generation number
-        mem1.set_gen_number(par_gen_num + 1)
-        mem2.set_gen_number(par_gen_num + 1)
+        #mem1.set_gen_number(par_gen_num + 1)
+        #mem2.set_gen_number(par_gen_num + 1)
+        new_gen_num = par_gen_num + 1
+        #print(new_gen_num)
+        mem1.set_gen_number(new_gen_num)
+        mem2.set_gen_number(new_gen_num)
 
         # Add new mems to new population
         new_generation[count] = mem1
@@ -2168,6 +2126,9 @@ def mutate_gene(population):
         sustain = population[p].get_s()
         for i in range(gene_length):
             sustain[i] = sustain[i] * scalar
+            # Sustains need to be between 0 and 1, this handles edge cases where sustain is set to above 1.0
+            if sustain[i] > 1.0:
+                sustain[i] = 1.0
 
         population[p].set_s(sustain)
 
@@ -2203,6 +2164,9 @@ def mutate_member(population):
             if(sound_mode == False and i == 0 and j == 0):
                 continue
             mem[i][j] = mem[i][j] * scalar
+            # Special case to avoid sustain values being above 1.0
+            if(i == 4 and mem[i][j] > 1.0):
+                mem[i][j] = 1.0
 
     population[p].set_genes(mem)
 
@@ -2266,6 +2230,12 @@ def single_island(param_pop):
 
     # if c != (gen_loops - 1):
     #     return new_population
+
+    # Updates generation number by incrementing parent generation number
+    for i in range(mems_per_pop):
+        temp = new_population[i].get_gen_number()
+        new_population[i].set_gen_number(temp + 1)
+
 
     return new_population
 
@@ -2588,10 +2558,14 @@ new_population = mutate_gene(new_population)
 #single_wav(new_population[0])
 
 
-single_island(new_population)
+new_population = single_island(new_population)
+
+#gnum = new_population[0].get_gen_number()
+#print(gnum)
 
 
-# for i in new_population:
+
+#for i in new_population:
 #    ga_query_functions.add_member(i, 2)
 
 
@@ -2603,3 +2577,16 @@ single_island(new_population)
 #     pid2 = i.get_parent2()
 #     print(pid1)
 #     print(pid2)
+
+
+# mems = []
+# a = 48
+# for i in range(8):
+#     temp = query.retrieve_member(a)
+#     a += 1
+#     mems.append(temp)
+
+# mems = single_island(mems)
+
+# gnum = mems[0].get_gen_number()
+# print(gnum)
