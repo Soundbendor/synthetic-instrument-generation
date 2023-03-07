@@ -518,7 +518,7 @@ ideal_set2.set_genes(temp_set2)
 
 # End of ideal set
 
-def intial_gen():
+def initial_gen():
 
     # Creates a new population using randomly generated values
     new_population = [0] * mems_per_pop
@@ -2331,7 +2331,7 @@ def island_model():
     for i in range(num_isles):
 
         # Make new generation and use single_island to run 10 generations
-        new_population = intial_gen()
+        new_population = initial_gen()
         islands[i] = single_island(new_population)
 
     # intermingling occurs here
@@ -2499,7 +2499,7 @@ def single_wav(member):
 #for i in range(num_genes):
 #    print(testing.genes[i])
 
-new_population = intial_gen()
+new_population = initial_gen()
 
 # for i in new_population:
 #     pid1 = i.get_parent1()
@@ -2518,7 +2518,7 @@ new_population = intial_gen()
 #    print("---------------------------------------------------------")
 
 
-# intial_gen appears to work correctly, on to other code
+# initial_gen appears to work correctly, on to other code
 
 
 #print(pop[0].genes[0][0])
