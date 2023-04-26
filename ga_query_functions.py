@@ -13,65 +13,70 @@ import random
 import os
 import math
 from datetime import datetime
+import json
+
+# Used to pull constant values from config file
+with open('config.json') as config_file:
+    data = json.load(config_file)
 
 # List of global constants
 
 # Number of chromosomes in each generation
-mems_per_pop = 8
+mems_per_pop = data["mems_per_pop"]
 
-# Number of chromosomes used for matingpool
-num_parents = mems_per_pop // 2
+# Number of chromosomes used for matingpool, should be half of mems_per_pop
+num_parents = data["num_parents"]
 
 # Number of genes each chromosome should have, should not be adjusted
-num_genes = 6
+num_genes = data["num_genes"]
 
 # Number of values in each gene
-gene_length = 10
+gene_length = data["gene_length"]
 
-# Maximum score of functions used to normalize values into range
-max_score = gene_length
+# Maximum score of functions used to normalize values into range, should be equal to gene_length
+max_score = data["max_score"]
 
 # Used to determine how many fitness helper we have in total
-num_funcs = 24
+num_funcs = data["num_funcs"]
 
 # Number of selection functions
-num_selection = 5
+num_selection = data["num_selection"]
 
-# Determines which crossover function is used, 0 for tournament, 1 for elitism, 2 for variety, 3 for roulette, 4 for rank
-selected_selection = 0
+# Determines which selection function is used, 0 for tournament, 1 for elitism, 2 for variety, 3 for roulette, 4 for rank
+selected_selection = data["selected_selection"]
 
 # Number of crossover functions
-num_crossover = 3
+num_crossover = data["num_crossover"]
 
 # Determines which crossover function is used, 0 for midpoint, 1 for uniform, 2 for deep uniform
-selected_crossover = 2
+selected_crossover = data["selected_crossover"]
 
 # Number of mutation functions
-num_mutation = 3
+num_mutation = data["num_mutation"]
 
 # Used to determine chance of mutation occurence in each generation
-chance = 1
+chance = data["chance"]
 
 # Boolean that switches between sound version (floats) and instrument version (ratios)
-sound_mode = False
+sound_mode = data["sound_mode"]
 
 # Number of generations made on a single island before cross mingling occurs
-gen_loops = 10
+gen_loops = data["gen_loops"]
 
 # Number of times islands swap members and run generations
-island_loops = 3
+island_loops = data["island_loops"]
 
 # Used to scale how aggresively the mutation function changes the genes
-mutate_scalar = 0.05
+mutate_scalar = data["mutate_scalar"]
 
 # Used for generating wav files so we can better understand the meaningful differences between the sounds
-universal_base_freq = 260
+universal_base_freq = data["universal_base_freq"]
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-generate_files = True
+generate_files = data["generate_files"]
 
 # Number of islands each generation in representation, with current representation should always be an even number
-num_isles = 20
+num_isles = data["num_isles"]
 
 
 
@@ -634,9 +639,94 @@ def add_member(member, populationID):
     # dex = str(i + 1)
     sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)"
     cursor.execute(sql, (str(w[0]), chromosomeID, '1', str(w[1]), chromosomeID, '2', str(w[2]), chromosomeID, '3', str(w[3]), chromosomeID, '4', str(w[4]), chromosomeID, '5', str(w[5]), chromosomeID, '6', str(w[6]), chromosomeID, '7', str(w[7]), chromosomeID, '8', str(w[8]), chromosomeID, '9', str(w[9]), chromosomeID, '10', str(w[10]), chromosomeID, '11', str(w[11]), chromosomeID, '12', str(w[12]), chromosomeID, '13', str(w[13]), chromosomeID, '14', str(w[14]), chromosomeID, '15', str(w[15]), chromosomeID, '16', str(w[16]), chromosomeID, '17', str(w[17]), chromosomeID, '18', str(w[18]), chromosomeID, '19', str(w[19]), chromosomeID, '20', str(w[20]), chromosomeID, '21', str(w[21]), chromosomeID, '22', str(w[22]), chromosomeID, '23', str(w[23]), chromosomeID, '24'))
-    # The database won't actually receive anything without this commi
+    # The database won't actually receive anything without this commit
     # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
     #db.commit()
+
+
+
+def count_votes(chromosomeID):
+
+    # Will take in the chromosome id of a member, find the number of votes they won and then divide them by
+    # the number of votes they participated in to get a percentage/average that will be used to determine that member's fitness score
+
+    total = 0
+    votes = 0
+    ratio = 0
+
+    # Records the number of votes this member won
+    sql = "SELECT `voteID` FROM `votes` WHERE `winnerID` = %s"
+    cursor.execute(sql, (chromosomeID))
+    result = cursor.fetchall()
+
+    # Handles edge case where this particular member has won no votes
+    if(len(result) == 0):
+        print("has not won any votes")
+        return 0
+
+    votes = len(result)
+    total += votes
+
+    # Records the number of votes this member was in but didn't win and adds that to total
+    sql = "SELECT `voteID` FROM `votes` WHERE `opponentID` = %s"
+    cursor.execute(sql, (chromosomeID))
+    result = cursor.fetchall()
+
+
+    # Handles edge case where this particular member only won votes
+    if(len(result) == 0):
+        print("has not lost any votes")
+        return 1
+
+    total += len(result)
+
+    # Calculates the percentage of votes won/votes participated in
+    ratio = votes / total
+    return ratio
+
+    # will need to test once database has votes in it
+
+
+# look for two islands at the same generation level, swap two members by updating each member's population id
+def swap_island_members():
+    # For now just do it randomly, but later versions could have population ids passed in as parameters
+
+    # find a random valid generation number
+    sql = "SELECT `generation_number` FROM `populations` HAVING COUNT(*) > 1 ORDER BY RAND() LIMIT 1"
+    cursor.execute(sql)
+    gen_num = cursor.fetchone()
+
+    # Pick two random islands with the same generation number
+    sql = "SELECT `populationID` FROM `populations` WHERE `generation_number` = %s ORDER BY RAND() LIMIT 2"
+    #sql = "SELECT `populationID` FROM `populations` GROUP BY `populationID` HAVING COUNT(*) > 1 ORDER BY RAND() LIMIT 2"
+    cursor.execute(sql, (gen_num))
+    island1 = cursor.fetchone()
+    island2 = cursor.fetchone()
+
+
+    # Select a random member from island 1
+    sql = "SELECT `chromosomeID` FROM `chromosomes` WHERE `populationID` = %s ORDER BY RAND()"
+    cursor.execute(sql, (island1))
+    mem1 = cursor.fetchone()
+
+
+    # Select a random member from island 2
+    sql = "SELECT `chromosomeID` FROM `chromosomes` WHERE `populationID` = %s ORDER BY RAND()"
+    cursor.execute(sql, (island2))
+    mem2 = cursor.fetchone()
+
+
+    # Update each mem with the other island's population id to effectively swap their places on the islands
+    sql = "UPDATE `chromosomes` SET `populationID` = %s WHERE `chromosomeID` = %s"
+    cursor.execute(sql, (island2, mem1))
+
+    sql = "UPDATE `chromosomes` SET `populationID` = %s WHERE `chromosomeID` = %s"
+    cursor.execute(sql, (island1, mem2))
+
+    # The database won't actually receive anything without this commit
+    # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
+    #db.commit()
+
 
 
 # Will eventually need an update member function that can be used when a mutation occurs
@@ -719,6 +809,21 @@ pop = ideal_set1.get_popID()
 # print(ws)
 
 # add_member(new_mem, 2)
+
+
+
+# See what happens with null values
+# sql = "SELECT `chromosomeID` FROM `chromosomes` WHERE `chromosomeID`= %s"
+# cursor.execute(sql, ("3155"))
+# result = cursor.fetchall()
+# chromosomeID = print(result)
+# if(chromosomeID == None):
+#     print("there's nothing!!!")
+# Returns None
+
+# print(count_votes("3139"))
+
+# swap_island_members()
 
 
 
