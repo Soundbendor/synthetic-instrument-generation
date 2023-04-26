@@ -1,0 +1,21 @@
+{
+	"mems_per_pop": 8, 
+	"num_parents": 	4, 
+	"num_genes": 6, 
+	"gene_length": 10, 
+	"max_score": 10, 
+	"num_funcs": 24, 
+	"num_selection": 5, 
+	"selected_selection": 0, 
+	"num_crossover": 3, 
+	"selected_crossover": 2, 
+	"num_mutation": 2, 
+	"chance": 1, 
+	"sound_mode": false, 
+	"gen_loops": 1, 
+	"island_loops": 3, 
+	"mutate_scalar": 0.05, 
+	"universal_base_freq": 260, 
+	"generate_files": false, 
+	"num_isles": 20 
+}
