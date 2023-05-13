@@ -9,7 +9,7 @@
 	"selected_selection": 0, 
 	"num_crossover": 3, 
 	"selected_crossover": 2, 
-	"num_mutation": 2, 
+	"num_mutation": 3, 
 	"chance": 1, 
 	"sound_mode": false, 
 	"gen_loops": 1, 
@@ -17,5 +17,117 @@
 	"mutate_scalar": 0.05, 
 	"universal_base_freq": 260, 
 	"generate_files": false, 
-	"num_isles": 20 
+	"num_isles": 20,
+	"voting_weight": 50, 
+
+	"helper_weight_0": 1,
+	"helper_func_0": "dummy_fitness_helper(population, ideal_set1, scores, helpers.weights[0], 0)",
+	"helper_on_off_0": true,
+
+	"helper_weight_1": 5,
+	"helper_func_1": "dummy_fitness_helper(population, ideal_set2, scores, helpers.weights[1], 1)",
+	"helper_on_off_1": true,
+
+	"helper_weight_2": 0.1,
+	"helper_func_2": "check_bad_amps(population, scores, helpers.weights[2], 2)",
+	"helper_on_off_2": true,
+
+	"helper_weight_3": 0.1,
+	"helper_func_3": "check_increasing_harmonics(population, scores, helpers.weights[3], 3)",
+	"helper_on_off_3": true,
+
+	"helper_weight_4": 5,
+	"helper_func_4": "check_true_harmonics(population, scores, helpers.weights[4], 4)",
+	"helper_on_off_4": true,
+
+	"helper_weight_5": 5,
+	"helper_func_5": "check_wobbling(population, scores, helpers.weights[5], 5)",
+	"helper_on_off_5": true,
+
+	"helper_weight_6": 5,
+	"helper_func_6": "check_octaves(population, scores, helpers.weights[6], 6)",
+	"helper_on_off_6": true,
+
+	"helper_weight_7": 5,
+	"helper_func_7": "check_fifths(population, scores, helpers.weights[7], 7)",
+	"helper_on_off_7": true,
+
+	"helper_weight_8": 0.5,
+	"helper_func_8": "amps_sum(population, scores, helpers.weights[8], 8)",
+	"helper_on_off_8": true,
+
+	"helper_weight_9": 0.0025,
+	"helper_func_9": "error_off_partials(population, scores, helpers.weights[9], 9)",
+	"helper_on_off_9": true,
+
+	"helper_weight_10": 1,
+	"helper_func_10": "error_off_amps(population, scores, helpers.weights[10], 10)",
+	"helper_on_off_10": true,
+
+	"helper_weight_11": 0.16,
+	"helper_func_11": "check_decreasing_attacks(population, scores, helpers.weights[11], 11)",
+	"helper_on_off_11": true,
+
+	"helper_weight_12": 1,
+	"helper_func_12": "check_amp_sum(population, scores, helpers.weights[12], 12)",
+	"helper_on_off_12": true,
+
+	"helper_weight_13": 0.05,
+	"helper_func_13": "check_pads(population, scores, helpers.weights[13], 13)",
+	"helper_on_off_13": true,
+
+	"helper_weight_14": 0.05,
+	"helper_func_14": "check_stacatos(population, scores, helpers.weights[14], 14)",
+	"helper_on_off_14": true,
+
+	"helper_weight_15": 0.05,
+	"helper_func_15": "check_percussive_sounds(population, scores, helpers.weights[15], 15)",
+	"helper_on_off_15": true,
+
+	"helper_weight_16": 0.0333,
+	"helper_func_16": "check_transients(population, scores, helpers.weights[16], 16)",
+	"helper_on_off_16": true,
+
+	"helper_weight_17": 20.0,
+	"helper_func_17": "check_amp_sparseness(population, scores, helpers.weights[17], 17)",
+	"helper_on_off_17": true,
+
+	"helper_weight_18": 0.2,
+	"helper_func_18": "avoid_too_quiet(population, scores, helpers.weights[18], 18)",
+	"helper_on_off_18": true,
+
+	"helper_weight_19": 0.2,
+	"helper_func_19": "check_decreasing_amps(population, scores, helpers.weights[19], 19)",
+	"helper_on_off_19": true,
+
+	"helper_weight_20": 0.5,
+	"helper_func_20": "fundamental_freq_amp(population, scores, helpers.weights[20], 20)",
+	"helper_on_off_20": true,
+
+	"helper_weight_21": 0.6666667,
+	"helper_func_21": "inverse_squared_amp(population, scores, helpers.weights[21], 21)",
+	"helper_on_off_21": true,
+
+	"helper_weight_22": 0.6666667,
+	"helper_func_22": "check_freq_sparseness(population, scores, helpers.weights[22], 22)",
+	"helper_on_off_22": true,
+
+	"helper_weight_23": 0.6666667,
+	"helper_func_23": "check_multiples_band(population, scores, helpers.weights[23], 23)",
+	"helper_on_off_23": true,
+
+	"selection_0": "tournament_selection(new_population, fit_scores)",
+	"selection_1": "elitism_selection(new_population, fit_scores)",
+	"selection_2": "variety_selection(new_population, fit_scores)",
+	"selection_3": "roulette_selection(new_population, fit_scores)",
+	"selection_4": "rank_selection(new_population, fit_scores)",
+
+	"crossover_0": "crossover(parents)",
+	"crossover_1": "uniform_crossover(parents)",
+	"crossover_2": "deep_uniform_crossover(parents)",
+
+	"mutation_0": "deep_uniform_crossover(parents)",
+	"mutation_1": "mutate_member(new_population)",
+	"mutation_2": "mutate_individual_weight(new_population)"
+
 }

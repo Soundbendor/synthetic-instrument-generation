@@ -1,10 +1,9 @@
 # Main goal of refactoring is to make GA representation more readiable and writeable to help make it better for setup with DB and website
 
 
-
 import numpy
 import random
-# import sound_generation        #commented out temporarily for testing purposes
+# import sound_generation        
 import ga_query_functions as query
 import os
 import math
@@ -69,267 +68,20 @@ mutate_scalar = data["mutate_scalar"]
 universal_base_freq = data["universal_base_freq"]
 
 # For testing purposes, makes it so wav files aren't generated if you don't want them
-generate_files = data["generated_files"]
+generate_files = data["generate_files"]
 
 # Number of islands each generation in representation, with current representation should always be an even number
 num_isles = data["num_isles"]
 
+# A constant used as a weight for the voting ratio of a particular chromosome/member
+voting_weight = data["voting_weight"]
 
 
-class GA:
-    # Stores the harms, amps, adsr env, weights, and base freq if applicable
 
-    def __init__(self):
 
-        # Set up most of the values, will still need a setter method for certain edge cases
-
-        self.harms = numpy.random.uniform(low=50.0, high=2500.0, size=gene_length)
-        self.amps = numpy.random.uniform(low=0.0, high = 1 / gene_length, size=gene_length)
-        self.a = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
-        self.d = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
-        self.s = numpy.random.uniform(low=0.0, high=1.0, size=gene_length)
-        self.r = numpy.random.uniform(low=0.0, high=3.0, size=gene_length)
-        self.weights = numpy.random.uniform(low=0.0, high=5.0, size=num_funcs)
-        self.base_freq = random.uniform(50.0, 170.0)
-
-        # Database relevant parts
-        self.populationID = 0
-        self.chromosomeID = 0
-        self.geneID = 0
-        self.parent1 = 0
-        self.parent2 = 0
-        self.gennum = 0
-
-
-        self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
-
-
-    def init_harms(self):
-
-        # Used to account for whether the program is running or sound mode or ratio mode
-        # By default. __init__ will generate the harms as if they were in sound mode
-        # init_harms should still be called even if you're running in sound mode 
-
-        if(not sound_mode):
-            self.harms = numpy.random.uniform(low=1.0, high=20.0, size=gene_length)
-            self.harms = numpy.sort(self.harms)
-            self.harms[0] = 1.0
-            self.genes[0] = self.harms
-        else:
-            #print("No need to change, it's in sound mode")
-            return
-
-
-    def set_harms(self, h):
-
-        # Function is given an array that will become the new self.harms
-        # Keep in mind that self.genes is updated to otherwise genes would not get the change from self.harms
-
-        self.harms = h
-        self.genes[0] = h
-
-
-    def set_amps(self, a):
-
-        # Function is given an array that will become the new self.amps
-        # Keep in mind that self.genes is updated to otherwise genes would not get the change from self.amps
-
-        self.amps = a
-        self.genes[1] = a
-
-
-    def set_a(self, a):
-
-        # Function is given an array that will become the new self.a
-        # Keep in mind that self.genes is updated to otherwise genes would not get the change from self.a
-
-        self.a = a
-        self.genes[2] = a
-
-
-    def set_d(self, d):
-
-        # Function is given an array that will become the new self.d
-        # Keep in mind that self.genes is updated to otherwise genes would not get the change from self.d
-
-        self.d = d
-        self.genes[3] = d
-
-
-    def set_s(self, s):
-
-        # Function is given an array that will become the new self.s
-        # Keep in mind that self.genes is updated to otherwise genes would not get the change from self.s
-
-        self.s = s
-        self.genes[4] = s
-
-
-    def set_r(self, r):
-
-        # Function is given an array that will become the new self.r
-        # Keep in mind that self.genes is updated to otherwise genes would not get the change from self.r
-
-        self.r = r
-        self.genes[5] = r
-
-
-    def set_genes(self, g):
-
-        # Function is given an array that will become the new self.genes
-        # Keep in mind that the harms, amps etc. are updated since otherwise changing genes would not change self.harms, self.amps etc.
-
-        self.genes = g
-
-        self.harms = g[0]
-        self.amps = g[1]
-        self.a = g[2]
-        self.d = g[3]
-        self.s = g[4]
-        self.r = g[5]
-
-    def set_weights(self, w):
-
-        # Function is given an array that will become self.weights
-
-        self.weights = w
-
-    def set_base_freq(self, freq):
-
-        # Setter for base frequency
-        self.base_freq = freq
-
-
-    def get_harms(self):
-
-        # Returns harmonics
-        return self.harms
-
-    def get_amps(self):
-
-        # Returns amplitudes
-        return self.amps
-
-    def get_a(self):
-
-        # Returns attack of adsr envelope
-        return self.a
-
-    def get_d(self):
-
-        # Returns decay of adsr envelope
-        return self.d
-
-    def get_s(self):
-
-        # Returns sustain of adsr envelope
-        return self.s
-
-    def get_r(self):
-
-        # Returns release of adsr envelope
-        return self.r
-
-    def get_weight(self, index):
-
-        # Returns the weight of a specific fitness helper determined by index
-        return self.weights[index]
-
-    def get_weights(self):
-
-        # Returns the entire weight array instead of a specific weight
-        return self.weights
-
-    def get_genes(self):
-
-        # Returns harms, amps and ADSR envelope as an array
-        return self.genes
-
-    def get_base_freq(self):
-
-        # Getter for base frequency
-        return self.base_freq
-
-    def set_popID(self,popID):
-
-        # Setter method for populationID
-        self.populationID = popID
-
-    def set_chromosomeID(self, chromoID):
-
-        # Setter method for chromosomeID
-        self.chromosomeID = chromoID 
-
-    def set_geneID(self, geneID):
-
-        # Setter method for geneID
-        self.geneID = geneID
-
-    def set_parent1(self, par1):
-
-        # Setter method for parent1
-        self.parent1 = par1
-
-    def set_parent2(self, par2):
-
-        # Setter method for parent2
-        self.parent2 = par2
-
-    def set_gen_number(self, num):
-
-        # Setter for gen_num
-        self.gennum = num
-
-    def get_popID(self):
-
-        # Getter method for populationID
-        return self.populationID
-
-    def get_chromosomeID(self):
-
-        # Getter method for chromosomeID
-        return self.chromosomeID
-
-    def get_geneID(self):
-
-        # Getter method for geneID
-        return self.geneID
-
-    def get_parent1(self):
-
-        # Getter method for parent1
-        return self.parent1
-
-    def get_parent2(self):
-
-        # Getter method for parent2
-        return self.parent2
-
-    def get_gen_number(self):
-
-        # Getter method for gen_number
-        return self.gennum
-
-
-    def reset(self):
-
-        self.harms = numpy.random.uniform(low=50.0, high=2500.0, size=gene_length)
-        self.amps = numpy.random.uniform(low=0.0, high = 1 / gene_length, size=gene_length)
-        self.a = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
-        self.d = numpy.random.uniform(low=0.0, high=0.2, size=gene_length)
-        self.s = numpy.random.uniform(low=0.0, high=1.0, size=gene_length)
-        self.r = numpy.random.uniform(low=0.0, high=3.0, size=gene_length)
-        self.weights = numpy.random.uniform(low=0.0, high=5.0, size=num_funcs)
-        self.base_freq = random.uniform(50.0, 170.0)
-
-        self.genes = [self.harms, self.amps, self.a, self.d, self.s, self.r]
 
         
 
-
-
-    # Will need to add setters because with the current representation, changing self.harms 
-    # does not change the corresponding value in self.genes
 
 
 # Class used to store info about fitness helper functions
@@ -345,102 +97,102 @@ helpers = fitness_helpers()
 # helper functions will need at least population, scores and helper.weights[i] and an int to indicate the helper function being used as parameters
 # helper weights are used to normalize each helper function
 # the on off switch determines which helper functions are used in the first place
+# mems_per_pop = data["mems_per_pop"] 
+helpers.weights[0] = data["helper_weight_0"]
+helpers.funcs[0] = data["helper_func_0"]
+helpers.on_off_switch[0] = data["helper_on_off_0"]
 
-helpers.weights[0] = 1
-helpers.funcs[0] = "dummy_fitness_helper(population, ideal_set1, scores, helpers.weights[0], 0)"
-helpers.on_off_switch[0] = True
+helpers.weights[1] = data["helper_weight_1"]
+helpers.funcs[1] = data["helper_func_1"]
+helpers.on_off_switch[1] = data["helper_on_off_1"]
 
-helpers.weights[1] = 5
-helpers.funcs[1] = "dummy_fitness_helper(population, ideal_set2, scores, helpers.weights[1], 1)"
-helpers.on_off_switch[1] = True
+helpers.weights[2] = data["helper_weight_2"]
+helpers.funcs[2] = data["helper_func_2"]
+helpers.on_off_switch[2] = data["helper_on_off_2"]
 
-helpers.weights[2] = 0.1
-helpers.funcs[2] = "check_bad_amps(population, scores, helpers.weights[2], 2)"
-helpers.on_off_switch[2] = True
+helpers.weights[3] = data["helper_weight_3"]
+helpers.funcs[3] = data["helper_func_3"]
+helpers.on_off_switch[3] = data["helper_on_off_3"]
 
-helpers.weights[3] = 0.1
-helpers.funcs[3] = "check_increasing_harmonics(population, scores, helpers.weights[3], 3)"
-helpers.on_off_switch[3] = True
+helpers.weights[4] = data["helper_weight_4"]
+helpers.funcs[4] = data["helper_func_4"]
+helpers.on_off_switch[4] = data["helper_on_off_4"]
 
-helpers.weights[4] = 5
-helpers.funcs[4] = "check_true_harmonics(population, scores, helpers.weights[4], 4)"
-helpers.on_off_switch[4] = True
+helpers.weights[5] = data["helper_weight_5"]
+helpers.funcs[5] = data["helper_func_5"]
+helpers.on_off_switch[5] = data["helper_on_off_5"]
 
-helpers.weights[5] = 5
-helpers.funcs[5] = "check_wobbling(population, scores, helpers.weights[5], 5)"
-helpers.on_off_switch[5] = True
+helpers.weights[6] = data["helper_weight_6"]
+helpers.funcs[6] = data["helper_func_6"]
+helpers.on_off_switch[6] = data["helper_on_off_6"]
 
-helpers.weights[6] = 5
-helpers.funcs[6] = "check_octaves(population, scores, helpers.weights[6], 6)"
-helpers.on_off_switch[6] = True
+helpers.weights[7] = data["helper_weight_7"]
+helpers.funcs[7] = data["helper_func_7"]
+helpers.on_off_switch[7] = data["helper_on_off_7"]
 
-helpers.weights[7] = 5
-helpers.funcs[7] = "check_fifths(population, scores, helpers.weights[7], 7)"
-helpers.on_off_switch[7] = True
+helpers.weights[8] = data["helper_weight_8"]
+helpers.funcs[8] = data["helper_func_8"]
+helpers.on_off_switch[8] = data["helper_on_off_8"]
 
-helpers.weights[8] = 0.5
-helpers.funcs[8] = "amps_sum(population, scores, helpers.weights[8], 8)"
-helpers.on_off_switch[8] = True
+helpers.weights[9] = data["helper_weight_9"]
+helpers.funcs[9] = data["helper_func_9"]
+helpers.on_off_switch[9] = data["helper_on_off_9"]
 
-helpers.weights[9] = 0.0025
-helpers.funcs[9] = "error_off_partials(population, scores, helpers.weights[9], 9)"
-helpers.on_off_switch[9] = True
+helpers.weights[10] = data["helper_weight_10"]
+helpers.funcs[10] = data["helper_func_10"]
+helpers.on_off_switch[10] = data["helper_on_off_10"]
 
-helpers.weights[10] = 1
-helpers.funcs[10] = "error_off_amps(population, scores, helpers.weights[10], 10)"
-helpers.on_off_switch[10] = True
+helpers.weights[11] = data["helper_weight_11"]
+helpers.funcs[11] = data["helper_func_11"]
+helpers.on_off_switch[11] = data["helper_on_off_11"]
 
-helpers.weights[11] = 0.16
-helpers.funcs[11] = "check_decreasing_attacks(population, scores, helpers.weights[11], 11)"
-helpers.on_off_switch[11] = True
+helpers.weights[12] = data["helper_weight_12"]
+helpers.funcs[12] = data["helper_func_12"]
+helpers.on_off_switch[12] = data["helper_on_off_12"]
 
-helpers.weights[12] = 1
-helpers.funcs[12] = "check_amp_sum(population, scores, helpers.weights[12], 12)"
-helpers.on_off_switch[12] = True
+helpers.weights[13] = data["helper_weight_13"]
+helpers.funcs[13] = data["helper_func_13"]
+helpers.on_off_switch[13] = data["helper_on_off_13"]
 
-helpers.weights[13] = 0.05
-helpers.funcs[13] = "check_pads(population, scores, helpers.weights[13], 13)"
-helpers.on_off_switch[13] = True
+helpers.weights[14] = data["helper_weight_14"]
+helpers.funcs[14] = data["helper_func_14"]
+helpers.on_off_switch[14] = data["helper_on_off_14"]
 
-helpers.weights[14] = 0.05
-helpers.funcs[14] = "check_stacatos(population, scores, helpers.weights[14], 14)"
-helpers.on_off_switch[14] = True
+helpers.weights[15] = data["helper_weight_15"]
+helpers.funcs[15] = data["helper_func_15"]
+helpers.on_off_switch[15] = data["helper_on_off_15"]
 
-helpers.weights[15] = 0.05
-helpers.funcs[15] = "check_percussive_sounds(population, scores, helpers.weights[15], 15)"
-helpers.on_off_switch[15] = True
+helpers.weights[16] = data["helper_weight_16"]
+helpers.funcs[16] = data["helper_func_16"]
+helpers.on_off_switch[16] = data["helper_on_off_16"]
 
-helpers.weights[16] = 0.0333
-helpers.funcs[16] = "check_transients(population, scores, helpers.weights[16], 16)"
-helpers.on_off_switch[16] = True
+helpers.weights[17] = data["helper_weight_17"]
+helpers.funcs[17] = data["helper_func_17"]
+helpers.on_off_switch[17] = data["helper_on_off_17"]
 
-helpers.weights[17] = 20.0
-helpers.funcs[17] = "check_amp_sparseness(population, scores, helpers.weights[17], 17)"
-helpers.on_off_switch[17] = True
+helpers.weights[18] = data["helper_weight_18"]
+helpers.funcs[18] = data["helper_func_18"]
+helpers.on_off_switch[18] = data["helper_on_off_18"]
 
-helpers.weights[18] = 0.2
-helpers.funcs[18] = "avoid_too_quiet(population, scores, helpers.weights[18], 18)"
-helpers.on_off_switch[18] = True
+helpers.weights[19] = data["helper_weight_19"]
+helpers.funcs[19] = data["helper_func_19"]
+helpers.on_off_switch[19] = data["helper_on_off_19"]
 
-helpers.weights[19] = 0.2
-helpers.funcs[19] = "check_decreasing_amps(population, scores, helpers.weights[19], 19)"
-helpers.on_off_switch[19] = True
+helpers.weights[20] = data["helper_weight_20"]
+helpers.funcs[20] = data["helper_func_20"]
+helpers.on_off_switch[20] = data["helper_on_off_20"]
 
-helpers.weights[20] = 0.5
-helpers.funcs[20] = "fundamental_freq_amp(population, scores, helpers.weights[20], 20)"
-helpers.on_off_switch[20] = True
+helpers.weights[21] = data["helper_weight_21"]
+helpers.funcs[21] = data["helper_func_21"]
+helpers.on_off_switch[21] = data["helper_on_off_21"]
 
-helpers.weights[21] = 0.6666667
-helpers.funcs[21] = "inverse_squared_amp(population, scores, helpers.weights[21], 21)"
-helpers.on_off_switch[21] = True
+helpers.weights[22] = data["helper_weight_22"]
+helpers.funcs[22] = data["helper_func_22"]
+helpers.on_off_switch[22] = data["helper_on_off_22"]
 
-helpers.weights[22] = 0.6666667
-helpers.funcs[22] = "check_freq_sparseness(population, scores, helpers.weights[22], 22)"
-helpers.on_off_switch[22] = True
-
-helpers.weights[23] = 0.6666667
-helpers.funcs[23] = "check_multiples_band(population, scores, helpers.weights[23], 23)"
-helpers.on_off_switch[23] = True
+helpers.weights[23] = data["helper_weight_23"]
+helpers.funcs[23] = data["helper_func_23"]
+helpers.on_off_switch[23] = data["helper_on_off_23"]
 
 
 # Set up for choosing selection
@@ -448,11 +200,11 @@ helpers.on_off_switch[23] = True
 
 selection_list = [0] * num_selection
 
-selection_list[0] = "tournament_selection(new_population, fit_scores)"
-selection_list[1] = "elitism_selection(new_population, fit_scores)"
-selection_list[2] = "variety_selection(new_population, fit_scores)"
-selection_list[3] = "roulette_selection(new_population, fit_scores)"
-selection_list[4] = "rank_selection(new_population, fit_scores)"
+selection_list[0] = data["selection_0"]
+selection_list[1] = data["selection_1"]
+selection_list[2] = data["selection_2"]
+selection_list[3] = data["selection_3"]
+selection_list[4] = data["selection_4"]
 
 
 # Set up for choosing crossover
@@ -460,9 +212,9 @@ selection_list[4] = "rank_selection(new_population, fit_scores)"
 
 crossover_list = [0] * num_crossover
 
-crossover_list[0] = "crossover(parents)"
-crossover_list[1] = "uniform_crossover(parents)"
-crossover_list[2] = "deep_uniform_crossover(parents)"
+crossover_list[0] = data["crossover_0"]
+crossover_list[1] = data["crossover_1"]
+crossover_list[2] = data["crossover_2"]
 
 
 # Set up for choosing mutation
@@ -470,9 +222,9 @@ crossover_list[2] = "deep_uniform_crossover(parents)"
 
 mutation_list = [0] * num_mutation
 
-mutation_list[0] = "mutate_gene(new_population)"
-mutation_list[1] = "mutate_member(new_population)"
-mutation_list[2] = "mutate_individual_weight(new_population)"
+mutation_list[0] = data["mutation_0"]
+mutation_list[1] = data["mutation_1"]
+mutation_list[2] = data["mutation_2"]
 
 
 # Making an ideal set, used for dummy fitness function
@@ -496,7 +248,7 @@ for i in range(gene_length):
     harms[i] = (i+1) * freq
 
 # FOR REFACTOR VERSION will need to use setters to make this happen
-ideal_set1 = GA()
+ideal_set1 = query.GA()
 temp_set1 = [harms, amps, a, d, s, r]
 ideal_set1.set_genes(temp_set1)
 
@@ -517,36 +269,13 @@ freq = 220
 for i in range(gene_length):
     harms[i] = (i+1) * freq
 
-ideal_set2 = GA()
+ideal_set2 = query.GA()
 temp_set2 = [harms, amps, a, d, s, r]
 ideal_set2.set_genes(temp_set2)
 
 # End of ideal set
 
-def initial_gen():
 
-    # Creates a new population using randomly generated values
-    new_population = [0] * mems_per_pop
-
-    for i in range(mems_per_pop):
-
-        #print(i)
-
-        temp = GA()
-        temp.init_harms()
-
-        new_population[i] = temp
-
-        #print(new_population[i])
-            
-            # The base freq index will be equal to the value num_genes
-            # In other parts of the code, the base_freq is usually referenced in the array using the constant num_genes
-            # num_genes is currently set to 6 which doesn't actually reflect the total length of the array
-            # The code is just set up in a way so base_freq and the weights array are not referenced for most of the helper functions
-            # where as the h, m and adsr arrays are referenced far more in the helper functions
-
-            
-    return new_population
 
 
 def dummy_fitness_helper(population, ideal_set, scores, weight, weight_index):
@@ -588,81 +317,30 @@ def dummy_fitness_helper(population, ideal_set, scores, weight, weight_index):
     return scores
 
 
-def fitness_calc(population, helpers, count):
-    
-    # Stores average scores of all chromosomes
-    # Make sure to use += in helper functions when calculating scores to avoid overwriting scores 
-
-    # Each member of the population has their own score
-    scores = [0] * mems_per_pop
-
-    # Based on votes
-    for i in range(mems_per_pop):
-        scores[i] += count_votes(population[i].chromosomeID)
-
-    # Based on fitness functions
-    for i in range(num_funcs):
-
-        if(helpers.on_off_switch[i]):
-            eval(helpers.funcs[i])
-
-        #if(count == (gen_loops - 1)):
-            # for the future, it may be useful to show scores of each member after each fitness helper as an alternative
-            # @@@@@@@@@@ WILL NEED TO CHANGE or uncomment THIS LATER @@@@@@@@@@@@@@@@@
-            #write_helper_score(scores, i)
-
-    if(count == (gen_loops - 1)):
-        f = open("GA_fitness_scores.txt", "a")
-        f.write("---------------------------------------------------\n")
-        f.close()
-
-    #print(scores)
-    return scores
 
 
-def write_fitness_scores(scores):
 
-    # Writes all genes in a file, useful to verify everything is working as intended
-    # Use a for append or w for overwrite
-    f = open("GA_fitness_scores.txt", "a")
-    for i in range(mems_per_pop):
-        f.write("Member {0}'s score: {1}\n".format(i + 1, scores[i]))
+# def write_fitness_scores(scores):
+
+#     # Writes all genes in a file, useful to verify everything is working as intended
+#     # Use a for append or w for overwrite
+#     f = open("GA_fitness_scores.txt", "a")
+#     for i in range(mems_per_pop):
+#         f.write("Member {0}'s score: {1}\n".format(i + 1, scores[i]))
             
-    f.write("---------------------------------------------------------------\n")
-    f.close()
+#     f.write("---------------------------------------------------------------\n")
+#     f.close()
 
 
-def write_helper_score(scores, num):
+# def write_helper_score(scores, num):
 
-    f = open("GA_fitness_scores.txt", "a")
-    #for i in range(mems_per_pop):
-    f.write("Helper {0}'s score: {1}\n".format(num + 1, scores))
+#     f = open("GA_fitness_scores.txt", "a")
+#     #for i in range(mems_per_pop):
+#     f.write("Helper {0}'s score: {1}\n".format(num + 1, scores))
             
-    #f.write("---------------------------------------------------------------\n")
-    f.close()
+#     #f.write("---------------------------------------------------------------\n")
+#     f.close()
 
-
-
-def tournament_selection(population, scores):
-
-    # Picks best parents sort of like tournament style with a bracket
-
-    # Stores the parents that will be used to make new generation
-    matingpool = [0] * num_parents
-    j = 0
-
-    # Checks two adjacent chromosomes, picks the one with the higher fitness score
-    # For loop advances by 2, not 1 like most loops
-    for i in range(0, mems_per_pop, 2):
-        if(scores[i] > scores[i + 1]):
-            matingpool[j] = population[i]
-        else:
-            matingpool[j] = population[i + 1]
-
-        # Advance to next index in parent array
-        j = j + 1
-
-    return matingpool
 
 
 
@@ -678,15 +356,6 @@ def print_generation(gen):
 
 
 
-
-
-# Latest: got the basic steps of GA, need to add island model stuff as well as all the various helper functions
-
-
-
-
-
-# EVERYTHING BELOW THIS IS UNTESTED, THIS IS JUST AN EFFORT TO QUICKLY MAKE PROGRESS AND TYPE THINGS OUT
 
 # Helper fitness functions
 
@@ -1355,26 +1024,34 @@ def check_multiples_band(population, scores, weight, weight_index):
 
 
 def fitness_calc(population, helpers, count):
-
+    
     # Stores average scores of all chromosomes
-    # Makes sure to use += in helper functions when calculating scores to avoid overwriting scores
+    # Make sure to use += in helper functions when calculating scores to avoid overwriting scores 
 
     # Each member of the population has their own score
     scores = [0] * mems_per_pop
+
+    # Based on votes
+    for i in range(mems_per_pop):
+        scores[i] += query.count_votes(population[i].chromosomeID) * voting_weight
+
+    # Based on fitness functions
     for i in range(num_funcs):
 
         if(helpers.on_off_switch[i]):
             eval(helpers.funcs[i])
 
-        if(count == (gen_loops - 1)):
-            # For the future, it may be useful to show scores of each member after each fitness helper as an alternative
-            write_helper_score(scores, i)
+        #if(count == (gen_loops - 1)):
+            # for the future, it may be useful to show scores of each member after each fitness helper as an alternative
+            # @@@@@@@@@@ WILL NEED TO CHANGE or uncomment THIS LATER @@@@@@@@@@@@@@@@@
+            #write_helper_score(scores, i)
 
     if(count == (gen_loops - 1)):
         f = open("GA_fitness_scores.txt", "a")
         f.write("---------------------------------------------------\n")
         f.close()
 
+    #print(scores)
     return scores
 
 
@@ -1591,8 +1268,8 @@ def crossover(parents):
             offspring2[cross_point:] = parent1[cross_point:]
 
             # Create new GA's to store new offspring's genes
-            mem1 = GA()
-            mem2 = GA()
+            mem1 = query.GA()
+            mem2 = query.GA()
 
             # Set genes using the 2 offspring arrays
             mem1.set_genes(offspring1)
@@ -1639,8 +1316,8 @@ def crossover(parents):
 
         # Create new GA's to store new offspring's genes
         # may need to use reset method to wipe mem1 and mem2 clean each loop iteration
-        mem1 = GA()
-        mem2 = GA()
+        mem1 = query.GA()
+        mem2 = query.GA()
 
         # Set genes using the 2 offspring arrays
         mem1.set_genes(offspring1)
@@ -1725,8 +1402,8 @@ def uniform_crossover(parents):
 
 
             #  Create new GA's to store new offspring's genes
-            mem1 = GA()
-            mem2 = GA()
+            mem1 = query.GA()
+            mem2 = query.GA()
 
             mem1.set_genes(child1)
             mem2.set_genes(child2)
@@ -1806,8 +1483,8 @@ def uniform_crossover(parents):
 
 
         #  Create new GA's to store new offspring's genes
-        mem1 = GA()
-        mem2 = GA()
+        mem1 = query.GA()
+        mem2 = query.GA()
 
         mem1.set_genes(child1)
         mem2.set_genes(child2)
@@ -1953,8 +1630,8 @@ def deep_uniform_crossover(parents):
                     weight2[z] = p_weights2[z]
 
             # Create new GA's for children
-            mem1 = GA()
-            mem2 = GA()
+            mem1 = query.GA()
+            mem2 = query.GA()
 
             # Set genes and weights of mem1 and mem2
             mem1.set_genes(child1)
@@ -2051,8 +1728,8 @@ def deep_uniform_crossover(parents):
                 weight2[z] = p_weights2[z]
 
         # Create new GA's for children
-        mem1 = GA()
-        mem2 = GA()
+        mem1 = query.GA()
+        mem2 = query.GA()
 
         # Set genes and weights of mem1 and mem2
         mem1.set_genes(child1)
@@ -2206,6 +1883,30 @@ def mutate_individual_weight(population):
 
     return population
 
+def initial_gen():
+
+    # Creates a new population using randomly generated values
+    new_population = [0] * mems_per_pop
+
+    for i in range(mems_per_pop):
+
+        #print(i)
+
+        temp = query.GA()
+        temp.init_harms()
+
+        new_population[i] = temp
+
+        #print(new_population[i])
+            
+            # The base freq index will be equal to the value num_genes
+            # In other parts of the code, the base_freq is usually referenced in the array using the constant num_genes
+            # num_genes is currently set to 6 which doesn't actually reflect the total length of the array
+            # The code is just set up in a way so base_freq and the weights array are not referenced for most of the helper functions
+            # where as the h, m and adsr arrays are referenced far more in the helper functions
+
+            
+    return new_population
 
 def single_island(param_pop):
 
@@ -2501,7 +2202,7 @@ def single_wav(member):
 # Used for testing purposes
 
 
-#testing = GA()
+#testing = query.GA()
 #testing.init_harms()
 #print(testing.harms)
 
@@ -2510,7 +2211,7 @@ def single_wav(member):
 #for i in range(num_genes):
 #    print(testing.genes[i])
 
-new_population = initial_gen()
+# new_population = initial_gen()
 
 # for i in new_population:
 #     pid1 = i.get_parent1()
@@ -2534,7 +2235,7 @@ new_population = initial_gen()
 
 #print(pop[0].genes[0][0])
 # count or the third arg are used to keep track of looping so printing occurs at the last loop which is determined by gen_loops
-fit_scores = fitness_calc(new_population, helpers, 1)
+# fit_scores = fitness_calc(new_population, helpers, 1)
 
 #print(new_population)
 
@@ -2543,7 +2244,7 @@ fit_scores = fitness_calc(new_population, helpers, 1)
 
 # other part of the most basic GA is selection, crossover and mutation
 
-parents = tournament_selection(new_population, fit_scores)
+# parents = tournament_selection(new_population, fit_scores)
 
 #print(parents)
 
@@ -2551,7 +2252,7 @@ parents = tournament_selection(new_population, fit_scores)
 
 #print_generation(parents)
 
-new_population = deep_uniform_crossover(parents)
+# new_population = deep_uniform_crossover(parents)
 
 #print("---------------------------------------------------------------------------")
 #print_generation(new_population)
@@ -2560,7 +2261,7 @@ new_population = deep_uniform_crossover(parents)
 #print(new_population)
 
 
-new_population = mutate_gene(new_population)
+# new_population = mutate_gene(new_population)
 
 #print("---------------------------------------------------------------------------")
 
@@ -2569,7 +2270,7 @@ new_population = mutate_gene(new_population)
 #single_wav(new_population[0])
 
 
-new_population = single_island(new_population)
+#new_population = single_island(new_population)
 
 #gnum = new_population[0].get_gen_number()
 #print(gnum)
@@ -2581,7 +2282,7 @@ new_population = single_island(new_population)
 
 
 
-#single_wav(new_population[0])
+# single_wav(new_population[0])
 
 # for i in new_population:
 #     pid1 = i.get_parent1()
