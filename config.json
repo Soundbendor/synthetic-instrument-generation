@@ -126,7 +126,7 @@
 	"crossover_1": "uniform_crossover(parents)",
 	"crossover_2": "deep_uniform_crossover(parents)",
 
-	"mutation_0": "deep_uniform_crossover(parents)",
+	"mutation_0": "mutate_gene(new_population)",
 	"mutation_1": "mutate_member(new_population)",
 	"mutation_2": "mutate_individual_weight(new_population)"
 
