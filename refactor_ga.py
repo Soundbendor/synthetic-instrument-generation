@@ -2,8 +2,7 @@
 
 
 import numpy
-import random
-# import sound_generation        
+import random      
 import ga_query_functions as query
 import os
 import math
@@ -316,30 +315,6 @@ def dummy_fitness_helper(population, ideal_set, scores, weight, weight_index):
 
     return scores
 
-
-
-
-
-# def write_fitness_scores(scores):
-
-#     # Writes all genes in a file, useful to verify everything is working as intended
-#     # Use a for append or w for overwrite
-#     f = open("GA_fitness_scores.txt", "a")
-#     for i in range(mems_per_pop):
-#         f.write("Member {0}'s score: {1}\n".format(i + 1, scores[i]))
-            
-#     f.write("---------------------------------------------------------------\n")
-#     f.close()
-
-
-# def write_helper_score(scores, num):
-
-#     f = open("GA_fitness_scores.txt", "a")
-#     #for i in range(mems_per_pop):
-#     f.write("Helper {0}'s score: {1}\n".format(num + 1, scores))
-            
-#     #f.write("---------------------------------------------------------------\n")
-#     f.close()
 
 
 

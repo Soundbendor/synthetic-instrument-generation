@@ -330,12 +330,12 @@ class GA:
 
 
 
-db = pymysql.connect(host = 'sigdb.cmnz4advdpzd.us-west-2.rds.amazonaws.com',
-                user = 'admin',
-                password = 'Beaver!1',
-                database = 'sig')
+# db = pymysql.connect(host = 'sigdb.cmnz4advdpzd.us-west-2.rds.amazonaws.com',
+#                 user = 'admin',
+#                 password = 'Beaver!1',
+#                 database = 'sig')
 
-cursor = db.cursor()
+# cursor = db.cursor()
 
 # Retrieves all the tables, just their title not the content
 # sql = '''show tables'''
@@ -383,6 +383,13 @@ def retrieve_member(chromosomeID):
     # in the future, will probably need to pick member based on a different criteria than their chromosome ID
 
     # Finds a member given their chromosome ID then returns the harmonics, amplitudes and adsr values of that member
+
+    db = pymysql.connect(host = 'sigdb.cmnz4advdpzd.us-west-2.rds.amazonaws.com',
+                user = 'admin',
+                password = 'Beaver!1',
+                database = 'sig')
+
+    cursor = db.cursor()
 
     # Gets the geneID with the corresponding chromosomeID
     sql = "SELECT `geneID` FROM `genes` WHERE `chromosomeID` = %s"
@@ -534,6 +541,13 @@ def retrieve_member(chromosomeID):
 
 def add_population(gen_number):
 
+    db = pymysql.connect(host = 'sigdb.cmnz4advdpzd.us-west-2.rds.amazonaws.com',
+                user = 'admin',
+                password = 'Beaver!1',
+                database = 'sig')
+
+    cursor = db.cursor()
+
     # Create a new island with the generation number given
     sql = "INSERT INTO `populations` (`generation_number`) VALUES (%s)"
     cursor.execute(sql, (gen_number))
@@ -647,6 +661,13 @@ def count_votes(chromosomeID):
 
     # Will take in the chromosome id of a member, find the number of votes they won and then divide them by
     # the number of votes they participated in to get a percentage/average that will be used to determine that member's fitness score
+
+    db = pymysql.connect(host = 'sigdb.cmnz4advdpzd.us-west-2.rds.amazonaws.com',
+                user = 'admin',
+                password = 'Beaver!1',
+                database = 'sig')
+
+    cursor = db.cursor()
 
     total = 0
     votes = 0
