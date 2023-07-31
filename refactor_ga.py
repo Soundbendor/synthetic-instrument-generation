@@ -1,13 +1,14 @@
 # Main goal of refactoring is to make GA representation more readiable and writeable to help make it better for setup with DB and website
 
-
 import numpy
-import random      
+import random
+# import sound_generation        
 import ga_query_functions as query
 import os
 import math
 from datetime import datetime
 import json
+import sys
 
 # Used to pull constant values from config file
 with open('config.json') as config_file:
@@ -18,7 +19,7 @@ with open('config.json') as config_file:
 # Number of chromosomes in each generation
 mems_per_pop = data["mems_per_pop"]
 
-# Number of chromosomes used for matingpool, should be half of mems_per_pop
+# Number of chromosomes used for matingpool, should be half of mems_per_pop SO when changing memes_per_pop in the JSON, remember to change num_parents as well
 num_parents = data["num_parents"]
 
 # Number of genes each chromosome should have, should not be adjusted
@@ -76,8 +77,14 @@ num_isles = data["num_isles"]
 voting_weight = data["voting_weight"]
 
 
+# A couple of safety nets to make sure certain variables are changed correctly
 
-
+if(mems_per_pop % 2 != 0):
+    sys.exit("ERROR mems_per_pop must be an even number")
+if(num_parents % 2 != 0):
+    sys.exit("ERROR num_parents must be an even number")
+if(mems_per_pop / 2 != num_parents):
+    sys.exit("ERROR num_parents should be half the value of mems_per_pop")
 
         
 
@@ -288,6 +295,12 @@ def dummy_fitness_helper(population, ideal_set, scores, weight, weight_index):
     # Goes through each element in array to see the difference between it and the ideal set version
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
+
         #print(population[i])
 
         mem_genes = population[i].get_genes()
@@ -319,19 +332,6 @@ def dummy_fitness_helper(population, ideal_set, scores, weight, weight_index):
 
 
 
-def print_generation(gen):
-
-    # Prints all genes in each chromosome
-    for i in range(mems_per_pop):
-        print("chromosome {0}".format(i + 1))
-        for j in range(num_genes):
-            print("Gene {0}".format(j + 1))
-            print(gen[i].genes[j])
-
-
-
-
-
 # Helper fitness functions
 
 def check_bad_amps(population, scores, weight, weight_index):
@@ -343,6 +343,12 @@ def check_bad_amps(population, scores, weight, weight_index):
     temp_score = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         # Takes array of amps from population array using get methods
         amps = population[i].get_amps()
 
@@ -370,6 +376,12 @@ def check_increasing_harmonics(population, scores, weight, weight_index):
     temp_score = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         # Takes array of harmonics from population array
         frequency = population[i].get_harms()
 
@@ -397,6 +409,11 @@ def check_true_harmonics(population, scores, weight, weight_index):
     temp_score = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
 
         # Take the frequency array from a member of the population
         freq = population[i].get_harms()
@@ -441,6 +458,11 @@ def check_wobbling(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         # Take the first frequency in the harmonics array of one member
         freq = population[i].get_harms()
         base_freq = freq[0]
@@ -474,6 +496,11 @@ def check_octaves(population, scores, weight, weight_index):
     temp_score = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
 
         freq = population[i].get_harms()
         # Take the first frequency in the harmonics array of one member
@@ -509,6 +536,11 @@ def check_fifths(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         freq = population[i].get_harms()
         # Take the first frequency in the harmonics array of one member
         base_freq = freq[0]
@@ -543,6 +575,11 @@ def amps_sum(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         amps = population[i].get_amps()
 
 
@@ -575,6 +612,11 @@ def error_off_partials(population, scores, weight, weight_index):
     # Rewards members that have frequencies that are closer to partials
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
 
         freq = population[i].get_harms()
 
@@ -618,6 +660,11 @@ def error_off_amps(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         amps = population[i].get_amps()
 
         temp_sum = 0
@@ -642,6 +689,12 @@ def check_decreasing_attacks(population, scores, weight, weight_index):
     temp_score = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         # Takes array of attacks from population array
         attack = population[i].get_a()
 
@@ -670,6 +723,11 @@ def check_amp_sum(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         amps = population[i].get_amps()
 
         for j in range(gene_length):
@@ -695,6 +753,11 @@ def check_pads(population, scores, weight, weight_index):
     R_sum = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
 
         attacks = population[i].get_a()
         releases = population[i].get_r()
@@ -726,6 +789,11 @@ def check_stacatos(population, scores, weight, weight_index):
     R_sum = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
 
         attacks = population[i].get_a()
         releases = population[i].get_r()
@@ -761,6 +829,11 @@ def check_percussive_sounds(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         attacks = population[i].get_a()
         releases = population[i].get_r()
 
@@ -795,6 +868,11 @@ def check_transients(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         decays = population[i].get_d()
         sustains = population[i].get_s()
 
@@ -826,6 +904,12 @@ def check_amp_sparseness(population, scores, weight, weight_index):
     # Uses standard deviation to calculate consistency
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         amp_mean = 0
         temp = 0
         amps = population[i].get_amps()
@@ -859,6 +943,11 @@ def avoid_too_quiet(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         amps = population[i].get_amps()
 
         for j in amps:
@@ -882,6 +971,12 @@ def check_decreasing_amps(population, scores, weight, weight_index):
     temp_score = 0
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         # Takes array of harmonics and amplitudes from population array
         freq = population[i].get_harms()
         amps = population[i].get_amps()
@@ -909,6 +1004,11 @@ def fundamental_freq_amp(population, scores, weight, weight_index):
 
     for i in range(mems_per_pop):
 
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         # Will need to search through each amplitude of each member
         amplitudes = population[i].get_amps()
 
@@ -929,6 +1029,11 @@ def inverse_squared_amp(population, scores, weight, weight_index):
     # Takes the difference between the actual value and 1/(index^2)
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
 
         amplitude = population[i].get_amps()
 
@@ -953,6 +1058,11 @@ def check_freq_sparseness(population, scores, weight, weight_index):
     # Punishes partials that are too close to each other
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
 
         freq = population[i].get_harms()
         freq.sort()
@@ -983,6 +1093,12 @@ def check_multiples_band(population, scores, weight, weight_index):
     
 
     for i in range(mems_per_pop):
+
+        # Checks if this particular member has this helper function flipped on
+        # if it's flipped off, that member will be skipped for this helper function
+        if(not(population[i].get_weight_on_off(weight_index))):
+            continue
+
         freq = population[i].get_harms()
         temp_score = 0
         base_freq = freq[0]
@@ -1006,20 +1122,43 @@ def fitness_calc(population, helpers, count):
     # Each member of the population has their own score
     scores = [0] * mems_per_pop
 
-    # Based on votes
-    for i in range(mems_per_pop):
-        scores[i] += query.count_votes(population[i].chromosomeID) * voting_weight
-
     # Based on fitness functions
     for i in range(num_funcs):
 
+        # WHEN UPDATING THIS will probably need a way to adjust scores to account for members that have more fitness functions activated
+        # maybe multiply each member's score by the inverse of its num funcs switched on?
+        # WILL ALSO need to update fitness functions, currently they are global and can only be turned on or off for all members, include index in parameters in config?
+        # OR within each fitness function, check if the on_off switch is on (this would probably be easier)
+
+        # Allows specific helper functions to be turned off globally instead of at the being randomly on or off at the individual level
         if(helpers.on_off_switch[i]):
             eval(helpers.funcs[i])
 
         #if(count == (gen_loops - 1)):
             # for the future, it may be useful to show scores of each member after each fitness helper as an alternative
-            # @@@@@@@@@@ WILL NEED TO CHANGE or uncomment THIS LATER @@@@@@@@@@@@@@@@@
-            #write_helper_score(scores, i)
+            # will need to change or update this to occasionally write the scores down
+            # write_helper_score(scores, i)
+
+    # Adjust scores to account for the fact that each member may have different number of helper functions used to calculate their score
+    for i in range(mems_per_pop):
+        count = 0
+
+        # checks how many helper functions this particular member used to calculate its fitness score
+        for j in range(num_funcs):
+            count += population[i].get_weight_on_off(j)
+        # print(count)
+
+        # avoids divide by zero error
+        if count == 0:
+            continue
+
+        # multiply by the inverse of helper functions used in order to normalize scores
+        scores[i] *= 1 / count
+
+
+    # Based on votes from website
+    for i in range(mems_per_pop):
+        scores[i] += query.count_votes(population[i].chromosomeID) * voting_weight
 
     if(count == (gen_loops - 1)):
         f = open("GA_fitness_scores.txt", "a")
@@ -1032,7 +1171,7 @@ def fitness_calc(population, helpers, count):
 
 def tournament_selection(population, scores):
 
-    # Picls the parents sort of like tournament style with a bracket
+    # Picks the parents sort of like tournament style with a bracket
 
     # Stores the parents that will be used to make a new generation
     matingpool = [0] * num_parents
@@ -1254,6 +1393,10 @@ def crossover(parents):
             mem1.set_weights(parents[0].get_weights())
             mem2.set_weights(parents[i].get_weights())
 
+            # Also need to add which helper functions are used for each member since that is not included in the genes array
+            mem1.set_weight_on_off(parents[0].get_weight_on_offs())
+            mem2.set_weight_on_off(parents[i].get_weight_on_offs())
+
             # Also need to store the parents by storing their chromosomeIDs
             mem1.set_parent1(pid1)
             mem1.set_parent2(pid2)
@@ -1301,6 +1444,10 @@ def crossover(parents):
         # Also need to add member specific weights since that is not included in genes array
         mem1.set_weights(parents[i].get_weights())
         mem2.set_weights(parents[i + 1].get_weights())
+
+        # Also need to add which helper functions are used for each member since that is not included in the genes array
+        mem1.set_weight_on_off(parents[i].get_weight_on_offs())
+        mem2.set_weight_on_off(parents[i + 1].get_weight_on_offs())
 
         # Also need to store the parents by storing their chromosomeIDs
         mem1.set_parent1(pid1)
@@ -1394,27 +1541,43 @@ def uniform_crossover(parents):
             mem1.set_gen_number(par_gen_num + 1)
             mem2.set_gen_number(par_gen_num + 1)
 
-            # Also need to do a coin flip to decide which parent's weights will be passed down
+            # Also need to do a coin flip to decide which parent's weights will be passed down and which helper functions will be used
             coin = random.randint(0,1)
+            coin2 = random.randint(0,1)
 
             if(coin):
-                # Picks parent 1
+                # Picks parent 1 for weights
                 mem1.set_weights(parents[0].get_weights())
-
             else:
-                # Picks parent 2
+                # Picks parent 2 for weights
                 mem1.set_weights(parents[num_parents - 1].get_weights())
 
+            if(coin2):
+                # Picks parent 1 for on off switches
+                mem1.set_weight_on_off(parents[0].get_weight_on_offs())
+            else:
+                # Picks parent 2 for on off switches
+                mem1.set_weight_on_off(parents[num_parents - 1].get_weight_on_offs)
+
 
             coin = random.randint(0,1)
+            coin2 = random.randint(0,1)
 
             if(coin):
-                # Picks parent 1
+                # Picks parent 1 for weights
                 mem2.set_weights(parents[0].get_weights())
-
             else:
-                # Picks parent 2
+                # Picks parent 2 for weights
                 mem2.set_weights(parents[num_parents - 1].get_weights())
+
+            if(coin2):
+                # Picks parent 1 for on off switches
+                mem2.set_weight_on_off(parents[0].get_weight_on_offs())
+            else:
+                # Picks parent 2 for on off switches
+                mem2.set_weight_on_off(parents[num_parents - 1].get_weight_on_offs)
+
+            
 
 
             # Add two new members to new population
@@ -1439,7 +1602,6 @@ def uniform_crossover(parents):
             if(coin):
                 # Picks parent 1
                 child1[i] = parent1[i]
-
             else:
                 # Picks parent 2
                 child1[i] = parent2[i]
@@ -1451,7 +1613,6 @@ def uniform_crossover(parents):
             if(coin):
                 # Picks parent 1
                 child2[i] = parent1[i]
-
             else:
                 # Picks parent 2
                 child2[i] = parent2[i]
@@ -1475,27 +1636,41 @@ def uniform_crossover(parents):
         mem1.set_gen_number(par_gen_num + 1)
         mem2.set_gen_number(par_gen_num + 1)
 
-        # Also need to do a coin flip to decide which parent's weights will be passed down
+        # Also need to do a coin flip to decide which parent's weights will be passed down and which helper functions will be used
         coin = random.randint(0,1)
+        coin2 = random.randint(0,1)
 
         if(coin):
-            # Picks parent 1
+            # Picks parent 1 for weight
             mem1.set_weights(parents[0].get_weights())
-
         else:
-            # Picks parent 2
+            # Picks parent 2 for weight
             mem1.set_weights(parents[num_parents - 1].get_weights())
 
+        if(coin2):
+            # Picks parent 1 for on off switch
+            mem1.set_weight_on_off(parents[0].get_weight_on_offs())
+        else:
+            # Picks parent 2 for on off switch
+            mem1.set_weight_on_off(parents[num_parents - 1].get_weight_on_offs())
+
 
         coin = random.randint(0,1)
+        coin2 = random.randint(0,1)
 
         if(coin):
-            # Picks parent 1
+            # Picks parent 1 for weight
             mem2.set_weights(parents[0].get_weights())
-
         else:
-            # Picks parent 2
+            # Picks parent 2 for weight
             mem2.set_weights(parents[num_parents - 1].get_weights())
+
+        if(coin2):
+            # Picks parent 1 for on off switch
+            mem1.set_weight_on_off(parents[0].get_weight_on_offs())
+        else:
+            # Picks parent 2 for on off switch
+            mem1.set_weight_on_off(parents[num_parents - 1].get_weight_on_offs())
 
 
         # Add two new members to new population
@@ -1527,6 +1702,7 @@ def deep_uniform_crossover(parents):
         sustain1 = [0] * gene_length
         release1 = [0] * gene_length
         weight1 = [0] * num_funcs
+        on_off1 = [0] * num_funcs
 
         child1 = [harmonics1, amplitudes1, attack1, decay1, sustain1, release1]
 
@@ -1538,6 +1714,7 @@ def deep_uniform_crossover(parents):
         sustain2 = [0] * gene_length
         release2 = [0] * gene_length
         weight2 = [0] * num_funcs
+        on_off2 = [0] * num_funcs
 
         child2 = [harmonics2, amplitudes2, attack2, decay2, sustain2, release2]
 
@@ -1552,6 +1729,8 @@ def deep_uniform_crossover(parents):
 
             p_weights1 = parents[0].get_weights()
             p_weights2 = parents[num_parents - 1].get_weights()
+            p_on_off_1 = parents[0].get_weight_on_offs()
+            p_on_off_2 = parents[num_parents - 1].get_weight_on_offs()
 
             for i in range(num_genes):
                 for j in range(gene_length):
@@ -1579,30 +1758,44 @@ def deep_uniform_crossover(parents):
                         child2[i][j] = parent2[i][j]
 
             for z in range(num_funcs):
-                # Extra handling for the weight array since it is different than the other genes
 
+                # Extra handling for the weight and on off arrays since they are different than the other genes
 
-                # Flip a coin to determine which parent is picked
+                # Flip two coins to determine which parent is picked
                 coin = random.randint(0,1)
+                coin2 = random.randint(0,1)
 
                 if(coin):
-                    # Pick parent 1
+                    # Pick parent 1 for weight
                     weight1[z] = p_weights1[z]
-
                 else:
-                    # Pick parent 2
+                    # Pick parent 2 for weight
                     weight1[z] = p_weights2[z]
 
-                # Flip a coin to determine which parent is picked
+                if(coin2):
+                    # Pick parent 1 for on off switch
+                    on_off1[z] = p_on_off_1[z]
+                else:
+                    # Pick parent 2 for on off switch
+                    on_off1[z] = p_on_off_2[z]
+
+                # Flip two coins to determine which parent is picked
                 coin = random.randint(0,1)
+                coin2 = random.randint(0,1)
 
                 if(coin):
-                    # Pick parent 1
+                    # Pick parent 1 for weight
                     weight2[z] = p_weights1[z]
-
                 else:
-                    # Pick parent 2
+                    # Pick parent 2 for weight
                     weight2[z] = p_weights2[z]
+
+                if(coin2):
+                    # Pick parent 1 for on off switch
+                    on_off2[z] = p_on_off_1[z]
+                else:
+                    # Pick parent 2 for on off switch
+                    on_off2[z] = p_on_off_2[z]
 
             # Create new GA's for children
             mem1 = query.GA()
@@ -1611,9 +1804,11 @@ def deep_uniform_crossover(parents):
             # Set genes and weights of mem1 and mem2
             mem1.set_genes(child1)
             mem1.set_weights(weight1)
+            mem1.set_weight_on_off(on_off1)
 
             mem2.set_genes(child2)
             mem2.set_weights(weight2)
+            mem2.set_weight_on_off(on_off2)
 
             # Also need to store each member's parents
             mem1.set_parent1(pid1)
@@ -1637,7 +1832,7 @@ def deep_uniform_crossover(parents):
             # Used to have a break statement but it did not break out of all loops
             # Instead a return statement is used to exit out of the function properly
 
-            return new_population
+            return new_generation
 
 
         # Everything below is similar to the special case above, the main
@@ -1648,8 +1843,10 @@ def deep_uniform_crossover(parents):
         pid2 = parents[c + 1].get_chromosomeID()
         par_gen_num = parents[c].get_gen_number()
 
-        p_weights1 = parents[c].get_weights()
-        p_weights2 = parents[c + 1].get_weights()
+        p_weights1 = parents[0].get_weights()
+        p_weights2 = parents[num_parents - 1].get_weights()
+        p_on_off_1 = parents[0].get_weight_on_offs()
+        p_on_off_2 = parents[num_parents - 1].get_weight_on_offs()
 
         for i in range(num_genes):
             for j in range(gene_length):
@@ -1677,30 +1874,44 @@ def deep_uniform_crossover(parents):
                     child2[i][j] = parent2[i][j]
 
         for z in range(num_funcs):
+            
             # Extra handling for the weight array since it is different than the other genes
 
-
-            # Flip a coin to determine which parent is picked
+            # Flip two coins to determine which parent is picked
             coin = random.randint(0,1)
+            coin2 = random.randint(0,1)
 
             if(coin):
-                # Pick parent 1
+                # Pick parent 1 for weight
                 weight1[z] = p_weights1[z]
-
             else:
-                # Pick parent 2
+                # Pick parent 2 for weight
                 weight1[z] = p_weights2[z]
 
-            # Flip a coin to determine which parent is picked
+            if(coin2):
+                # Pick parent 1 for on off switch
+                on_off1[z] = p_on_off_1[z]
+            else:
+                # Pick parent 2 for on off switch
+                 on_off1[z] = p_on_off_2[z]
+
+            # Flip two coins to determine which parent is picked
             coin = random.randint(0,1)
+            coin2 = random.randint(0,1)
 
             if(coin):
-                # Pick parent 1
+                # Pick parent 1 for weight
                 weight2[z] = p_weights1[z]
-
             else:
-                # Pick parent 2
+                # Pick parent 2 for weight
                 weight2[z] = p_weights2[z]
+
+            if(coin2):
+                # Pick parent 1 for on off switch
+                on_off2[z] = p_on_off_1[z]
+            else:
+                # Pick parent 2 for on off switch
+                on_off2[z] = p_on_off_2[z]
 
         # Create new GA's for children
         mem1 = query.GA()
@@ -1856,7 +2067,62 @@ def mutate_individual_weight(population):
 
     population[p].set_weights(w)
 
+
+    # Have a chance to turn a helper on or off
+
+    s = population[p].get_weight_on_offs()
+
+    for i in range(num_funcs):
+
+        # Have a low chance to pick a helper function
+        coin = random.randint(0, num_funcs)
+
+        if(coin == 0):
+            # Changes current on off switch for a helper function to its opposite
+            if(s[i] == 0):
+                s[i] = 1
+            else:
+                s[i] = 1
+
     return population
+
+
+
+
+# def write_fitness_scores(scores):
+
+#     # Writes all genes in a file, useful to verify everything is working as intended
+#     # Use a for append or w for overwrite
+#     f = open("GA_fitness_scores.txt", "a")
+#     for i in range(mems_per_pop):
+#         f.write("Member {0}'s score: {1}\n".format(i + 1, scores[i]))
+            
+#     f.write("---------------------------------------------------------------\n")
+#     f.close()
+
+
+# def write_helper_score(scores, num):
+
+#     f = open("GA_fitness_scores.txt", "a")
+#     #for i in range(mems_per_pop):
+#     f.write("Helper {0}'s score: {1}\n".format(num + 1, scores))
+            
+#     #f.write("---------------------------------------------------------------\n")
+#     f.close()
+
+
+
+
+def print_generation(gen):
+
+    # Prints all genes in each chromosome
+    for i in range(mems_per_pop):
+        print("chromosome {0}".format(i + 1))
+        for j in range(num_genes):
+            print("Gene {0}".format(j + 1))
+            print(gen[i].genes[j])
+
+
 
 def initial_gen():
 
@@ -1892,7 +2158,7 @@ def single_island(param_pop):
     for c in range(gen_loops):
 
         # Calculates fitness scores using helper functions
-        fit_scores1 = fitness_calc(new_population, helpers, c)
+        fit_scores = fitness_calc(new_population, helpers, c)
 
         # Determine which chromosomes will be used as parents
         # Chooses between list of selection methods, toggleable at top of file ADD THOSE TO TOP
@@ -1918,10 +2184,10 @@ def single_island(param_pop):
     # if c != (gen_loops - 1):
     #     return new_population
 
-    # Updates generation number by incrementing parent generation number
-    for i in range(mems_per_pop):
-        temp = new_population[i].get_gen_number()
-        new_population[i].set_gen_number(temp + 1)
+    # if there are issues with the crossover function updating gen_num, then use the code below to manually increment the gen_num
+    # for i in range(mems_per_pop):
+    #     temp = new_population[i].get_gen_number()
+    #     new_population[i].set_gen_number(temp + 1)
 
 
     return new_population
@@ -2277,3 +2543,12 @@ def single_wav(member):
 
 # gnum = mems[0].get_gen_number()
 # print(gnum)
+
+
+
+
+
+
+# comment out when not testing things out
+# pop = initial_gen()
+# single_island(pop)

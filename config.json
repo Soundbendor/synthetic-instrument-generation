@@ -18,7 +18,7 @@
 	"universal_base_freq": 260, 
 	"generate_files": false, 
 	"num_isles": 20,
-	"voting_weight": 50, 
+	"voting_weight": 100, 
 
 	"helper_weight_0": 1,
 	"helper_func_0": "dummy_fitness_helper(population, ideal_set1, scores, helpers.weights[0], 0)",

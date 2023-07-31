@@ -94,6 +94,7 @@ class GA:
         self.s = numpy.random.uniform(low=0.0, high=1.0, size=gene_length)
         self.r = numpy.random.uniform(low=0.0, high=3.0, size=gene_length)
         self.weights = numpy.random.uniform(low=0.0, high=5.0, size=num_funcs)
+        self.weight_on_off = numpy.random.randint(0, 2, num_funcs) # randomly generates num_funcs integers that are either 0 or 1 (bottom limit is inclusive, top range is exclusive)
         self.base_freq = random.uniform(50.0, 170.0)
 
         # Database relevant parts
@@ -198,6 +199,12 @@ class GA:
 
         self.weights = w
 
+    def set_weight_on_off(self, oof):
+
+        # Function is given an array that will become self.weight_on_off
+
+        self.weight_on_off = oof
+
     def set_base_freq(self, freq):
 
         # Setter for base frequency
@@ -243,6 +250,16 @@ class GA:
 
         # Returns the entire weight array instead of a specific weight
         return self.weights
+
+    def get_weight_on_off(self, index):
+
+        # Returns the on_off switch of a specific fitness helper determined by index
+        return self.weight_on_off[index]
+
+    def get_weight_on_offs(self):
+
+        # Returns the entire weight-on-off array instead of a specific on off switch
+        return self.weight_on_off
 
     def get_genes(self):
 
@@ -378,6 +395,10 @@ class GA:
 # need to modify GA to store database related info
 
 
+
+# WILL NEED TO MODIFY the GA class and will need to update database representation as well as database functions
+
+
 def retrieve_member(chromosomeID):
 
     # in the future, will probably need to pick member based on a different criteria than their chromosome ID
@@ -497,11 +518,22 @@ def retrieve_member(chromosomeID):
 
     w = []
 
-    # @@@@@@@@ will later need to set this to num_funcs @@@@@@@@
+    
     for i in range(num_funcs):
         result = cursor.fetchone()
         result = float(result[0])
         w.append(result)
+
+    # test code, have not modified database to support this section yet, can probably be combined with other weight code?
+    sql = "SELECT `on_off` FROM `weights` WHERE `chromosomeID`=%s ORDER BY `helper_func` ASC"
+    cursor.execute(sql, (chromosomeID))
+
+    woo = []
+
+    for i in range(num_funcs):
+        result = cursor.fetchone()
+        result = int(result[0])
+        woo.append(result)
 
 
     
@@ -525,6 +557,8 @@ def retrieve_member(chromosomeID):
     member_genes = [harms,amps,a,d,s,r]
 
     member.set_weights(w)
+    # testing
+    member.set_weight_on_off(woo)
 
     member.set_genes(member_genes)
     member.set_popID(populationID)
@@ -534,7 +568,8 @@ def retrieve_member(chromosomeID):
     member.set_parent2(parent2)
     member.set_gen_number(gen_num)
 
-
+    cursor.close()
+    db.close()
 
     return member
 
@@ -561,7 +596,11 @@ def add_population(gen_number):
 
     # The database won't actually receive anything without this commit
     # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
-    # db.commit()
+    #db.commit()
+
+    cursor.close()
+    db.close()
+
 
     return populationID
 
@@ -571,6 +610,13 @@ def add_population(gen_number):
 # and instead of populationID being the param, the generation number is the param
 
 def add_member(member, populationID):
+
+    db = pymysql.connect(host = 'sigdb.cmnz4advdpzd.us-west-2.rds.amazonaws.com',
+                user = 'admin',
+                password = 'Beaver!1',
+                database = 'sig')
+
+    cursor = db.cursor()
 
 
     p1 = member.get_parent1()
@@ -644,16 +690,29 @@ def add_member(member, populationID):
     sql = "INSERT INTO `releases` (`value`, `geneID`) VALUES (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s), (%s, %s)"
     cursor.execute(sql, (str(r[0]), geneID, str(r[1]), geneID, str(r[2]), geneID, str(r[3]), geneID, str(r[4]), geneID, str(r[5]), geneID, str(r[6]), geneID, str(r[7]), geneID, str(r[8]), geneID, str(r[9]), geneID))
 
-    w = member.get_weights()
+    
     # Insert the weights of the helper functions of each members
     # w = str(weight[i])
     # dex = str(i + 1)
-    sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)"
-    cursor.execute(sql, (str(w[0]), chromosomeID, '1', str(w[1]), chromosomeID, '2', str(w[2]), chromosomeID, '3', str(w[3]), chromosomeID, '4', str(w[4]), chromosomeID, '5', str(w[5]), chromosomeID, '6', str(w[6]), chromosomeID, '7', str(w[7]), chromosomeID, '8', str(w[8]), chromosomeID, '9', str(w[9]), chromosomeID, '10', str(w[10]), chromosomeID, '11', str(w[11]), chromosomeID, '12', str(w[12]), chromosomeID, '13', str(w[13]), chromosomeID, '14', str(w[14]), chromosomeID, '15', str(w[15]), chromosomeID, '16', str(w[16]), chromosomeID, '17', str(w[17]), chromosomeID, '18', str(w[18]), chromosomeID, '19', str(w[19]), chromosomeID, '20', str(w[20]), chromosomeID, '21', str(w[21]), chromosomeID, '22', str(w[22]), chromosomeID, '23', str(w[23]), chromosomeID, '24'))
+
+    # sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)"
+    # cursor.execute(sql, (str(w[0]), chromosomeID, '1', str(w[1]), chromosomeID, '2', str(w[2]), chromosomeID, '3', str(w[3]), chromosomeID, '4', str(w[4]), chromosomeID, '5', str(w[5]), chromosomeID, '6', str(w[6]), chromosomeID, '7', str(w[7]), chromosomeID, '8', str(w[8]), chromosomeID, '9', str(w[9]), chromosomeID, '10', str(w[10]), chromosomeID, '11', str(w[11]), chromosomeID, '12', str(w[12]), chromosomeID, '13', str(w[13]), chromosomeID, '14', str(w[14]), chromosomeID, '15', str(w[15]), chromosomeID, '16', str(w[16]), chromosomeID, '17', str(w[17]), chromosomeID, '18', str(w[18]), chromosomeID, '19', str(w[19]), chromosomeID, '20', str(w[20]), chromosomeID, '21', str(w[21]), chromosomeID, '22', str(w[22]), chromosomeID, '23', str(w[23]), chromosomeID, '24'))
+
+    w = member.get_weights()
+    woo = member.get_weight_on_offs()
+    sql = "INSERT INTO `weights` (`value`, `chromosomeID`, `helper_func`, `on_off`) VALUES (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s), (%s, %s, %s, %s)"
+    cursor.execute(sql, (str(w[0]), chromosomeID, '1', str(woo[0]), str(w[1]), chromosomeID, '2', str(woo[1]), str(w[2]), chromosomeID, '3', str(woo[2]), str(w[3]), chromosomeID, '4', str(woo[3]), str(w[4]), chromosomeID, '5', str(woo[4]), str(w[5]), chromosomeID, '6', str(woo[5]), str(w[6]), chromosomeID, '7', str(woo[6]), str(w[7]), chromosomeID, '8', str(woo[7]), str(w[8]), chromosomeID, '9', str(woo[8]), str(w[9]), chromosomeID, '10', str(woo[9]), str(w[10]), chromosomeID, '11', str(woo[10]), str(w[11]), chromosomeID, '12', str(woo[11]), str(w[12]), chromosomeID, '13', str(woo[12]), str(w[13]), chromosomeID, '14', str(woo[13]), str(w[14]), chromosomeID, '15', str(woo[14]), str(w[15]), chromosomeID, '16', str(woo[15]), str(w[16]), chromosomeID, '17', str(woo[16]), str(w[17]), chromosomeID, '18', str(woo[17]), str(w[18]), chromosomeID, '19', str(woo[18]), str(w[19]), chromosomeID, '20', str(woo[19]), str(w[20]), chromosomeID, '21', str(woo[20]), str(w[21]), chromosomeID, '22', str(woo[21]), str(w[22]), chromosomeID, '23', str(woo[22]), str(w[23]), chromosomeID, '24', str(woo[23])))
     
+
+    
+
     # The database won't actually receive anything without this commit
     # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
     #db.commit()
+
+    cursor.close()
+    db.close()
+
 
 
 
@@ -680,7 +739,7 @@ def count_votes(chromosomeID):
 
     # Handles edge case where this particular member has won no votes
     if(len(result) == 0):
-        print("has not won any votes")
+        # print("has not won any votes")
         return 0
 
     votes = len(result)
@@ -694,7 +753,7 @@ def count_votes(chromosomeID):
 
     # Handles edge case where this particular member only won votes
     if(len(result) == 0):
-        print("has not lost any votes")
+        # print("has not lost any votes")
         return 1
 
     total += len(result)
@@ -705,10 +764,21 @@ def count_votes(chromosomeID):
 
     # will need to test once database has votes in it
 
+    cursor.close()
+    db.close()
+
+
 
 # look for two islands at the same generation level, swap two members by updating each member's population id
 def swap_island_members():
     # For now just do it randomly, but later versions could have population ids passed in as parameters
+
+    db = pymysql.connect(host = 'sigdb.cmnz4advdpzd.us-west-2.rds.amazonaws.com',
+                user = 'admin',
+                password = 'Beaver!1',
+                database = 'sig')
+
+    cursor = db.cursor()
 
     # find a random valid generation number
     sql = "SELECT `generation_number` FROM `populations` HAVING COUNT(*) > 1 ORDER BY RAND() LIMIT 1"
@@ -746,30 +816,13 @@ def swap_island_members():
     # @@@@@@@@@@@@@@@ UNCOMMENT THIS LINE when you are ready to actually send the inserts @@@@@@@@@@@@@@@ 
     #db.commit()
 
+    cursor.close()
+    db.close()
+
 
 
 # Will eventually need an update member function that can be used when a mutation occurs
 
-
-# TESTER CODE
-
-
-# chromoID = 2
-# new_mem = retrieve_member(chromoID)
-
-# popID = new_mem.get_popID()
-# har = new_mem.get_harms()
-# gi = new_mem.get_geneID()
-
-# print(popID)
-# print(gi)
-# print(har)
-
-# weight = new_mem.get_weights()
-# print(weight)
-
-# num = new_mem.get_gen_number()
-# print(num)
 
 
 
@@ -793,23 +846,7 @@ for i in range(gene_length):
 
 weights = [3.2] * num_funcs
 
-# FOR REFACTOR VERSION will need to use setters to make this happen
-ideal_set1 = GA()
-temp_set1 = [harms, amps, a, d, s, r]
-ideal_set1.set_genes(temp_set1)
-ideal_set1.set_weights(weights)
-ideal_set1.set_base_freq(freq)
-ideal_set1.set_parent1(3)
-ideal_set1.set_parent2(2)
-ideal_set1.set_popID(2)
 
-pop = ideal_set1.get_popID()
-
-#add_member(ideal_set1, pop)
-
-
-# popID = add_population(5)
-# print(popID)
 
 
 
@@ -843,6 +880,60 @@ pop = ideal_set1.get_popID()
 # print(count_votes("3139"))
 
 # swap_island_members()
+
+
+
+
+
+
+
+# Tester code to double check all query functions
+
+# chromoID = 5828
+# new_mem = retrieve_member(chromoID)
+
+# popID = new_mem.get_popID()
+# har = new_mem.get_harms()
+# gi = new_mem.get_geneID()
+
+# print(popID)
+# print(gi)
+# print(har)
+
+# weight = new_mem.get_weights()
+# print(weight)
+
+# num = new_mem.get_gen_number()
+# print(num)
+
+# woos = new_mem.get_weight_on_offs()
+# print(woos)
+
+
+# FOR REFACTOR VERSION will need to use setters to make this happen
+# ideal_set1 = GA()
+# temp_set1 = [harms, amps, a, d, s, r]
+# ideal_set1.set_genes(temp_set1)
+# ideal_set1.set_weights(weights)
+# ideal_set1.set_base_freq(freq)
+# ideal_set1.set_parent1(3)
+# ideal_set1.set_parent2(2)
+# ideal_set1.set_popID(690)
+
+# pop = ideal_set1.get_popID()
+
+# add_member(ideal_set1, pop)
+
+
+# popID = add_population(3)
+# print(popID)
+
+
+
+
+
+
+
 
 
 
